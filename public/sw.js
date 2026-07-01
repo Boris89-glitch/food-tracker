@@ -1,6 +1,6 @@
 // Simple app-shell service worker for offline use + home-screen install.
 // Firebase Auth/Firestore traffic is intentionally NOT intercepted.
-const CACHE = "ft-shell-v1";
+const CACHE = "ft-shell-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -32,6 +32,22 @@ self.addEventListener("fetch", e => {
   // Everything else (Firebase APIs, Google auth) goes straight to network.
   if (!sameOrigin && !staticCdn) return;
 
+  // The HTML page is network-first so app updates show immediately after a
+  // deploy; fall back to cache only when offline.
+  const isPage = req.mode === "navigate" ||
+    (sameOrigin && (url.pathname === "/" || url.pathname.endsWith("/index.html")));
+  if (isPage) {
+    e.respondWith(
+      fetch(req).then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
+        return res;
+      }).catch(() => caches.match(req).then(hit => hit || caches.match("./index.html")))
+    );
+    return;
+  }
+
+  // Other static assets (icons, manifest, CDN libs): cache-first for speed.
   e.respondWith(
     caches.match(req).then(hit => {
       if (hit) return hit;

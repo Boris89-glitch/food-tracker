@@ -149,6 +149,28 @@
   .seg button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
   .hrow{display:flex;justify-content:space-between;padding:14px 4px;border-bottom:1px solid var(--line2);font-size:16px}
   .hrow:last-child{border-bottom:none}.hrow .d{font-weight:700}.hrow .meta{color:var(--muted)}
+  .logged{cursor:pointer}
+  .logged .amt{color:var(--muted);font-size:14px;font-weight:600;margin-left:2px}
+  .modeseg{display:flex;gap:5px;margin:2px 0}
+  .modeseg button{flex:1;padding:7px 4px;border:1px solid var(--line);background:#fff;border-radius:9px;
+    font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
+  .modeseg button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .amtrow{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .amtrow input{flex:1;font-size:22px;font-weight:700;text-align:center}
+  .amtrow .amtunit{font-size:18px;font-weight:800;color:var(--muted);min-width:34px}
+  .amtpresets{display:flex;gap:8px;margin-bottom:18px}
+  .amtpresets button{flex:1;padding:11px;border:1px solid var(--line);background:#fff;border-radius:11px;
+    font-size:15px;font-weight:700;color:var(--ink);cursor:pointer}
+  .amtpresets button:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  .fcard .fn{padding-left:26px}
+  .fcard .fav{position:absolute;top:10px;left:9px;width:28px;height:28px;border:none;background:none;
+    color:#c9d0d8;font-size:20px;cursor:pointer;line-height:1;padding:0;display:flex;align-items:center;justify-content:center;transition:.12s}
+  .fcard .fav:hover{color:#ef4444;transform:scale(1.12)}
+  .fcard .fav.on{color:#ef4444}
+  .favbucket{min-height:auto;margin-bottom:30px;border-color:#f3d0d4}
+  .favbucket h3{border-bottom-color:#f6e0e2}
+  .favbucket h3 .sub{color:#ef4444}
+  .favgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;width:100%}
   /* Auth gate */
   .authgate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px;z-index:100}
   .authcard{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);
@@ -228,6 +250,8 @@
 
     <div class="meals" id="meals"></div>
 
+    <div class="meal favbucket" id="favBucket"></div>
+
     <div class="libhead">
       <span class="t">Food library</span>
       <span class="hint">drag a card up into a meal — or tap ＋ to choose</span>
@@ -271,6 +295,13 @@
 
 <div class="pickwrap" id="pickWrap"><div class="pick">
   <div class="pt" id="pickTitle">Add to…</div><div id="pickBtns"></div>
+</div></div>
+
+<div class="pickwrap" id="amtWrap"><div class="pick">
+  <div class="pt" id="amtTitle"></div>
+  <div class="amtrow"><input id="amtVal" type="number" inputmode="decimal" min="0"><span class="amtunit" id="amtUnit"></span></div>
+  <div class="amtpresets" id="amtPresets"></div>
+  <button class="add" id="amtSave">Add</button>
 </div></div>
 
 <script type="module">
@@ -325,7 +356,26 @@ if(!localStorage.getItem("ft2_init")){
     {id:uid(),name:"Boiled egg",cal:78},{id:uid(),name:"Oatmeal bowl",cal:220}
   ];}
   localStorage.setItem("ft2_init","1");
+  writeLS();
 }
+
+// Data model: a food carries a RATE — kcal per 100 g/ml (mode "per100") or kcal
+// per item (mode "item"). A log entry carries an amount + a snapshot of that
+// rate, so its calories can be recomputed and old foods can be deleted safely.
+// These helpers also migrate the legacy {name,cal} shape (treated as 1 item).
+function normFood(f){
+  if(f.mode)return f;
+  return {id:f.id||uid(),name:f.name,mode:"item",kcal:+f.cal||0,unit:"g"};
+}
+function normEntry(e){
+  if(e.mode&&e.amount!=null)return e;
+  return {id:e.id||uid(),name:e.name,meal:e.meal,mode:"item",unit:"",amount:1,rate:+e.cal||0,cal:+e.cal||0};
+}
+foods=foods.map(normFood);
+for(const dk in logs)logs[dk]=(logs[dk]||[]).map(normEntry);
+const calcCal=(mode,rate,amt)=>Math.round(mode==="item"?rate*amt:rate*amt/100);
+const rateLabel=f=>f.mode==="item"?`${(+f.kcal).toLocaleString()} kcal / item`:`${(+f.kcal).toLocaleString()} kcal / 100 ${f.unit}`;
+const amtLabel=e=>e.mode==="item"?`× ${e.amount}`:`${e.amount} ${e.unit}`;
 
 // ── Persistence: localStorage (instant/offline) + Firestore (cross-device) ──
 let userRef=null, saveTimer=null;
@@ -384,7 +434,7 @@ const mealTotal=(k,m)=>entriesFor(k).filter(e=>e.meal===m).reduce((s,e)=>s+(+e.c
 function renderToday(){
   $("dateLabel").innerHTML=isToday(cur)?`Today<small>${fmtLong(cur)}</small>`:`${fmtLong(cur)}<small>&nbsp;</small>`;
   $("nextDay").disabled=key(cur)>=key(today);
-  renderHero();renderMeals();renderLib();
+  renderHero();renderMeals();renderFavorites();renderLib();
 }
 function renderHero(){
   const k=key(cur),tot=dayTotal(k),rem=goal-tot,pct=goal>0?tot/goal:0;
@@ -407,8 +457,8 @@ function renderMeals(){
   $("meals").innerHTML=MEALS.map(m=>{
     const items=entriesFor(k).filter(e=>e.meal===m.key);
     const body=items.length
-      ? items.map(e=>`<div class="logged" draggable="true" data-entry="${e.id}">
-          <span class="nm">${esc(e.name)}</span>
+      ? items.map(e=>`<div class="logged" draggable="true" data-entry="${e.id}" title="Tap to edit amount">
+          <span class="nm">${esc(e.name)} <span class="amt">${amtLabel(e)}</span></span>
           <span class="right"><span class="cal">${(+e.cal).toLocaleString()} kcal</span>
           <button class="del" data-del="${e.id}" title="Remove">✕</button></span></div>`).join("")
       : `<div class="dropempty">Drop food here</div>`;
@@ -417,7 +467,7 @@ function renderMeals(){
       <span class="sub">${mealTotal(k,m.key).toLocaleString()} kcal</span></h3>
       <div class="body">${body}</div></div>`;
   }).join("");
-  document.querySelectorAll(".meal").forEach(el=>{
+  document.querySelectorAll("#meals .meal").forEach(el=>{
     const m=el.dataset.meal;
     el.addEventListener("dragover",ev=>{ev.preventDefault();el.classList.add("drop");});
     el.addEventListener("dragleave",ev=>{if(!el.contains(ev.relatedTarget))el.classList.remove("drop");});
@@ -426,60 +476,139 @@ function renderMeals(){
   document.querySelectorAll(".logged").forEach(el=>{
     el.addEventListener("dragstart",ev=>{ev.dataTransfer.setData("text/plain","entry:"+el.dataset.entry);el.classList.add("dragging");});
     el.addEventListener("dragend",()=>el.classList.remove("dragging"));
+    el.addEventListener("click",ev=>{if(ev.target.closest(".del"))return;openAmountEdit(el.dataset.entry);});
   });
-  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>removeEntry(b.dataset.del));
+  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=e=>{e.stopPropagation();removeEntry(b.dataset.del);});
 }
 function handleDrop(data,meal){
   if(!data)return;
-  if(data.startsWith("food:")){const f=foods.find(x=>x.id===data.slice(5));if(f)logFood(f,meal);}
+  if(data.startsWith("food:")){const f=foods.find(x=>x.id===data.slice(5));if(f)openAmountLog(f,meal);}
   else if(data.startsWith("entry:")){moveEntry(data.slice(6),meal);}
 }
-function logFood(f,meal){const k=key(cur);(logs[k]=logs[k]||[]).push({id:uid(),name:f.name,cal:+f.cal,meal});save();renderToday();}
 function moveEntry(id,meal){const k=key(cur);const e=entriesFor(k).find(x=>x.id===id);if(e&&e.meal!==meal){e.meal=meal;save();renderToday();}}
 function removeEntry(id){const k=key(cur);logs[k]=entriesFor(k).filter(e=>e.id!==id);if(!logs[k].length)delete logs[k];save();renderToday();}
+
+// Shared food-card markup + wiring, used by both the library and the Favorites bucket.
+function foodCardHTML(f){
+  return `<div class="fcard" draggable="true" data-food="${f.id}">
+      <button class="fav${f.fav?" on":""}" data-fav="${f.id}" title="${f.fav?"Remove favorite":"Favorite"}">${f.fav?"♥":"♡"}</button>
+      <button class="plus" data-add="${f.id}" title="Add to a meal">+</button>
+      <div class="fn">${esc(f.name)}</div>
+      <div class="fc">${rateLabel(f)}</div>
+      <button class="trash" data-trash="${f.id}" title="Delete from library">🗑</button></div>`;
+}
+function wireFoodCards(root){
+  root.querySelectorAll(".fcard[data-food]").forEach(el=>{
+    el.addEventListener("dragstart",ev=>{ev.dataTransfer.setData("text/plain","food:"+el.dataset.food);el.classList.add("dragging");});
+    el.addEventListener("dragend",()=>el.classList.remove("dragging"));
+  });
+  root.querySelectorAll("[data-add]").forEach(b=>b.onclick=e=>{e.stopPropagation();openPicker(b.dataset.add);});
+  root.querySelectorAll("[data-trash]").forEach(b=>b.onclick=e=>{e.stopPropagation();deleteFood(b.dataset.trash);});
+  root.querySelectorAll("[data-fav]").forEach(b=>b.onclick=e=>{e.stopPropagation();toggleFav(b.dataset.fav);});
+}
+function toggleFav(id){const f=foods.find(x=>x.id===id);if(!f)return;f.fav=!f.fav;save();renderFavorites();renderLib();}
+function renderFavorites(){
+  const favs=foods.filter(f=>f.fav).sort((a,b)=>a.name.localeCompare(b.name));
+  const body=favs.length
+    ? `<div class="favgrid">${favs.map(foodCardHTML).join("")}</div>`
+    : `<div class="dropempty">Tap the ♡ on any food below to keep it here for quick logging</div>`;
+  $("favBucket").innerHTML=`<h3><span class="nm"><span class="ic">❤️</span>Favorites</span>
+    <span class="sub">${favs.length||""}</span></h3><div class="body">${body}</div>`;
+  wireFoodCards($("favBucket"));
+}
 
 function renderLib(){
   const q=($("libSearch").value||"").toLowerCase();
   const list=foods.filter(f=>f.name.toLowerCase().includes(q)).sort((a,b)=>a.name.localeCompare(b.name));
-  const cards=list.map(f=>`<div class="fcard" draggable="true" data-food="${f.id}">
-      <button class="plus" data-add="${f.id}" title="Add to a meal">+</button>
-      <div class="fn">${esc(f.name)}</div>
-      <div class="fc"><b>${(+f.cal).toLocaleString()}</b> kcal</div>
-      <button class="trash" data-trash="${f.id}" title="Delete from library">🗑</button></div>`).join("");
+  const cards=list.map(foodCardHTML).join("");
+  const modes=[["per100-g","/100g"],["per100-ml","/100ml"],["item","item"]];
   const addCard=`<div class="fcard addcard">
       <input id="newName" placeholder="New food name" autocomplete="off">
-      <div class="mini"><input id="newCal" type="number" inputmode="numeric" placeholder="kcal">
+      <div class="modeseg" id="modeSeg">${modes.map(([m,l])=>`<button data-mode="${m}"${m===newMode?' class="on"':""}>${l}</button>`).join("")}</div>
+      <div class="mini"><input id="newCal" type="number" inputmode="numeric" placeholder="${newCalPh()}">
       <button id="newAdd">Add</button></div></div>`;
   $("libGrid").innerHTML=(list.length?cards:(q?`<div class="libempty">No match for “${esc(q)}”.</div>`:""))+addCard;
-  document.querySelectorAll(".fcard[data-food]").forEach(el=>{
-    el.addEventListener("dragstart",ev=>{ev.dataTransfer.setData("text/plain","food:"+el.dataset.food);el.classList.add("dragging");});
-    el.addEventListener("dragend",()=>el.classList.remove("dragging"));
-  });
-  document.querySelectorAll("[data-add]").forEach(b=>b.onclick=e=>{e.stopPropagation();openPicker(b.dataset.add);});
-  document.querySelectorAll("[data-trash]").forEach(b=>b.onclick=e=>{e.stopPropagation();deleteFood(b.dataset.trash);});
+  wireFoodCards($("libGrid"));
   $("newAdd").onclick=addFood;
   $("newCal").addEventListener("keydown",e=>{if(e.key==="Enter")addFood();});
   $("newName").addEventListener("keydown",e=>{if(e.key==="Enter")$("newCal").focus();});
+  document.querySelectorAll("#modeSeg [data-mode]").forEach(b=>b.onclick=()=>{
+    newMode=b.dataset.mode;
+    document.querySelectorAll("#modeSeg [data-mode]").forEach(x=>x.classList.toggle("on",x.dataset.mode===newMode));
+    $("newCal").placeholder=newCalPh();
+  });
 }
 function addFood(){
   const name=($("newName").value||"").trim(),cal=Math.round(+$("newCal").value);
   if(!name||!(cal>0)){const t=$("newName").value.trim()?$("newCal"):$("newName");t.style.borderColor="var(--danger)";setTimeout(()=>t.style.borderColor="",700);t.focus();return;}
-  foods.push({id:uid(),name,cal});save();renderLib();
+  const mode=newMode==="item"?"item":"per100",u=newMode==="per100-ml"?"ml":"g";
+  foods.push({id:uid(),name,mode,kcal:cal,unit:u});save();renderLib();
 }
 function deleteFood(id){const f=foods.find(x=>x.id===id);if(!f)return;
   if(confirm(`Remove “${f.name}” from your library? (Past logs stay.)`)){foods=foods.filter(x=>x.id!==id);save();renderLib();}}
 $("libSearch").addEventListener("input",renderLib);
+
+let newMode="per100-g";
+const newCalPh=()=>newMode==="item"?"kcal per item":newMode==="per100-ml"?"kcal per 100 ml":"kcal per 100 g";
 
 let pickFood=null;
 function openPicker(foodId){
   pickFood=foods.find(f=>f.id===foodId);if(!pickFood)return;
   $("pickTitle").textContent="Add “"+pickFood.name+"” to…";
   $("pickBtns").innerHTML=MEALS.map(m=>`<button data-pm="${m.key}"><span>${m.ic}</span>${m.label}</button>`).join("");
-  document.querySelectorAll("[data-pm]").forEach(b=>b.onclick=()=>{logFood(pickFood,b.dataset.pm);closePicker();});
+  document.querySelectorAll("[data-pm]").forEach(b=>b.onclick=()=>{const f=pickFood;closePicker();openAmountLog(f,b.dataset.pm);});
   $("pickWrap").classList.add("on");
 }
 function closePicker(){$("pickWrap").classList.remove("on");pickFood=null;}
 $("pickWrap").onclick=e=>{if(e.target===$("pickWrap"))closePicker();};
+
+// ── Amount modal: choose grams/ml or item count when logging or editing ──
+let amtCtx=null;
+function openAmountLog(f,meal){
+  amtCtx={kind:"log",food:f,meal};
+  const isItem=f.mode==="item",ml=(MEALS.find(m=>m.key===meal)||{}).label||"";
+  $("amtTitle").textContent=(isItem?"How many · ":"How much · ")+f.name;
+  $("amtUnit").textContent=isItem?"×":f.unit;
+  $("amtVal").value=isItem?1:100;
+  renderPresets(f.mode);
+  $("amtSave").textContent="Add to "+ml;
+  openAmt();
+}
+function openAmountEdit(id){
+  const e=entriesFor(key(cur)).find(x=>x.id===id);if(!e)return;
+  amtCtx={kind:"edit",id};
+  const isItem=e.mode==="item";
+  $("amtTitle").textContent="Edit · "+e.name;
+  $("amtUnit").textContent=isItem?"×":e.unit;
+  $("amtVal").value=e.amount;
+  renderPresets(e.mode);
+  $("amtSave").textContent="Save";
+  openAmt();
+}
+function renderPresets(mode){
+  const opts=mode==="item"?[1,2,3,4]:[50,100,150,200];
+  $("amtPresets").innerHTML=opts.map(v=>`<button data-amt="${v}">${v}</button>`).join("");
+  document.querySelectorAll("#amtPresets [data-amt]").forEach(b=>b.onclick=()=>{$("amtVal").value=b.dataset.amt;$("amtVal").focus();});
+}
+function openAmt(){$("amtWrap").classList.add("on");setTimeout(()=>{$("amtVal").focus();$("amtVal").select();},30);}
+function closeAmt(){$("amtWrap").classList.remove("on");amtCtx=null;}
+function commitAmount(){
+  if(!amtCtx)return;
+  const amount=+$("amtVal").value;
+  if(!(amount>0)){$("amtVal").style.borderColor="var(--danger)";setTimeout(()=>$("amtVal").style.borderColor="",700);return;}
+  const k=key(cur);
+  if(amtCtx.kind==="log"){
+    const f=amtCtx.food;
+    (logs[k]=logs[k]||[]).push({id:uid(),name:f.name,meal:amtCtx.meal,mode:f.mode,unit:f.unit,amount,rate:+f.kcal,cal:calcCal(f.mode,+f.kcal,amount)});
+  }else{
+    const e=entriesFor(k).find(x=>x.id===amtCtx.id);
+    if(e){e.amount=amount;e.cal=calcCal(e.mode,e.rate,amount);}
+  }
+  save();closeAmt();renderToday();
+}
+$("amtSave").onclick=commitAmount;
+$("amtVal").addEventListener("keydown",e=>{if(e.key==="Enter")commitAmount();});
+$("amtWrap").onclick=e=>{if(e.target===$("amtWrap"))closeAmt();};
 function editGoal(){const v=prompt("Daily calorie goal:",goal);if(v===null)return;const n=Math.round(+v);if(n>0){goal=n;save();renderHero();}}
 
 $("prevDay").onclick=()=>{cur.setDate(cur.getDate()-1);renderToday();};
