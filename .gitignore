@@ -2,6 +2,10 @@ node_modules/
 dist/
 dev-dist/
 .firebase/
+# Firebase CLI agent-skills pack (local AI-assistant reference docs)
+.agents/
+.claude/skills/
+skills-lock.json
 firebase-debug.log
 firestore-debug.log
 *.log

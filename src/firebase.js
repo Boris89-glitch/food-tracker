@@ -15,12 +15,13 @@ import {
 } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: "PASTE_API_KEY",
-  authDomain: "PASTE_PROJECT.firebaseapp.com",
-  projectId: "PASTE_PROJECT_ID",
-  storageBucket: "PASTE_PROJECT.appspot.com",
-  messagingSenderId: "PASTE_SENDER_ID",
-  appId: "PASTE_APP_ID",
+  apiKey: "AIzaSyAvxxJ13QeXxaYM4qFu_ZPSYjjvvse1HHM",
+  authDomain: "food-tracker-ceb1d.firebaseapp.com",
+  projectId: "food-tracker-ceb1d",
+  storageBucket: "food-tracker-ceb1d.firebasestorage.app",
+  messagingSenderId: "401810836927",
+  appId: "1:401810836927:web:93485667695e406762a50a",
+  measurementId: "G-XX984EWS6T",
 };
 
 export const CONFIGURED = !firebaseConfig.apiKey.startsWith("PASTE_");
