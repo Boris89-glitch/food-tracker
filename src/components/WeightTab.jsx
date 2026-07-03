@@ -73,22 +73,25 @@ export default function WeightTab({ data, update, visible }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weight, unit, visible]);
 
-  const card = "mb-[22px] rounded-[18px] border border-line bg-white p-6 shadow-card";
+  const card =
+    "rounded-2xl border border-line bg-white p-4 shadow-card sm:rounded-[18px] sm:p-6";
   const sectit =
-    "mb-4 mt-0 text-[15px] font-extrabold uppercase tracking-[0.6px] text-muted";
+    "mb-3 mt-0 text-[13px] font-extrabold uppercase tracking-[0.6px] text-muted sm:mb-4 sm:text-[15px]";
 
   return (
-    <section className="animate-fade grid grid-cols-1 gap-[22px] min-[980px]:grid-cols-2">
+    <section className="animate-fade grid grid-cols-1 gap-3.5 sm:gap-[22px] min-[980px]:grid-cols-2">
       <div className={card}>
         <p className={sectit}>Log weight</p>
-        <div className="mb-5 flex gap-6">
+        <div className="mb-4 flex gap-3 sm:mb-5 sm:gap-6">
           <div className="flex-1">
-            <div className="text-3xl font-extrabold">{latest != null ? `${latest} ${unit}` : "—"}</div>
-            <div className="text-sm text-muted">Latest</div>
+            <div className="text-xl font-extrabold sm:text-3xl">
+              {latest != null ? `${latest} ${unit}` : "—"}
+            </div>
+            <div className="text-xs text-muted sm:text-sm">Latest</div>
           </div>
           <div className="flex-1">
             <div
-              className="text-3xl font-extrabold"
+              className="text-xl font-extrabold sm:text-3xl"
               style={
                 change != null
                   ? { color: change > 0 ? "var(--color-danger)" : "var(--color-accent)" }
@@ -97,11 +100,11 @@ export default function WeightTab({ data, update, visible }) {
             >
               {change != null ? `${change > 0 ? "+" : ""}${change.toFixed(1)} ${unit}` : "—"}
             </div>
-            <div className="text-sm text-muted">Change (30d)</div>
+            <div className="text-xs text-muted sm:text-sm">Change (30d)</div>
           </div>
           <div className="flex-1">
-            <div className="text-3xl font-extrabold">{keys.length}</div>
-            <div className="text-sm text-muted">Entries</div>
+            <div className="text-xl font-extrabold sm:text-3xl">{keys.length}</div>
+            <div className="text-xs text-muted sm:text-sm">Entries</div>
           </div>
         </div>
         <label className="mb-[7px] block text-sm font-bold text-muted">Weight for today</label>
@@ -128,7 +131,7 @@ export default function WeightTab({ data, update, visible }) {
       </div>
       <div className={card}>
         <p className={sectit}>Weight trend</p>
-        <div className="relative h-[320px]">
+        <div className="relative h-[230px] sm:h-[320px]">
           <canvas ref={canvasRef} />
         </div>
         {!keys.length && (
