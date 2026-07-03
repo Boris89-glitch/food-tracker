@@ -532,8 +532,10 @@ export default function TodayTab({ data, update }) {
   const handleDrop = (payload, meal) => {
     if (!payload) return;
     if (payload.startsWith("food:")) {
+      // Drop = log a default serving straight away (1 item, or 100 g/ml).
+      // Tap the logged entry afterward to adjust the amount.
       const f = foods.find((x) => x.id === payload.slice(5));
-      if (f) setAmtCtx({ kind: "log", food: f, meal });
+      if (f) logFood(f, meal, f.mode === "item" ? 1 : 100);
     } else if (payload.startsWith("entry:")) {
       moveEntry(payload.slice(6), meal);
     }
