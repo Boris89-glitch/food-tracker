@@ -30,7 +30,7 @@ function Overlay({ onClose, children }) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-[320px] rounded-[20px] bg-white p-[22px] shadow-[0_16px_50px_rgba(0,0,0,0.25)]">
+      <div className="w-[min(92vw,340px)] rounded-[20px] bg-white p-[22px] shadow-[0_16px_50px_rgba(0,0,0,0.25)]">
         {children}
       </div>
     </div>
@@ -153,7 +153,7 @@ function FoodCard({ f, onAdd, onTrash, onFav, onDragAway }) {
         if (!dragValidDrop) onDragAway?.();
       }}
       className={
-        "group relative cursor-grab select-none rounded-2xl border border-line bg-white px-[18px] pb-4 pt-[18px] shadow-card transition duration-[130ms] hover:-translate-y-[3px] hover:border-[#d2d9e0] hover:shadow-pop active:cursor-grabbing " +
+        "group relative cursor-grab select-none rounded-xl border border-line bg-white px-2.5 pb-2.5 pt-3 shadow-card transition duration-[130ms] hover:-translate-y-[3px] hover:border-[#d2d9e0] hover:shadow-pop active:cursor-grabbing sm:rounded-2xl sm:px-[18px] sm:pb-4 sm:pt-[18px] " +
         (dragging ? "opacity-40" : "")
       }
     >
@@ -161,7 +161,7 @@ function FoodCard({ f, onAdd, onTrash, onFav, onDragAway }) {
         onClick={onFav}
         title={f.fav ? "Remove favorite" : "Favorite"}
         className={
-          "absolute left-[9px] top-2.5 flex h-7 w-7 cursor-pointer items-center justify-center border-none bg-transparent p-0 text-xl leading-none transition duration-[120ms] hover:scale-[1.12] hover:text-[#ef4444] " +
+          "absolute left-1 top-1.5 flex h-6 w-6 cursor-pointer items-center justify-center border-none bg-transparent p-0 text-base leading-none transition duration-[120ms] hover:scale-[1.12] hover:text-[#ef4444] sm:left-[9px] sm:top-2.5 sm:h-7 sm:w-7 sm:text-xl " +
           (f.fav ? "text-[#ef4444]" : "text-[#c9d0d8]")
         }
       >
@@ -170,19 +170,19 @@ function FoodCard({ f, onAdd, onTrash, onFav, onDragAway }) {
       <button
         onClick={onAdd}
         title="Add to a meal"
-        className="absolute right-[11px] top-[11px] flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-[9px] border-none bg-accent-soft text-xl font-bold leading-none text-accent hover:bg-accent hover:text-white"
+        className="absolute right-1.5 top-1.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-lg border-none bg-accent-soft text-base font-bold leading-none text-accent hover:bg-accent hover:text-white sm:right-[11px] sm:top-[11px] sm:h-[30px] sm:w-[30px] sm:rounded-[9px] sm:text-xl"
       >
         +
       </button>
-      <div className="mb-[5px] break-words pl-[26px] pr-6 text-[17px] font-bold leading-[1.25]">
+      <div className="mb-1 break-words pl-[22px] pr-5 text-[13px] font-bold leading-[1.25] sm:mb-[5px] sm:pl-[26px] sm:pr-6 sm:text-[17px]">
         {f.name}
       </div>
-      <div className="text-[15px] font-semibold text-muted">
+      <div className="text-xs font-semibold text-muted sm:text-[15px]">
         {rateLabel(f)
           .split(" kcal")
           .map((part, i) =>
             i === 0 ? (
-              <b key={i} className="text-[17px] font-extrabold text-accent">
+              <b key={i} className="text-[13px] font-extrabold text-accent sm:text-[17px]">
                 {part}
               </b>
             ) : (
@@ -193,7 +193,7 @@ function FoodCard({ f, onAdd, onTrash, onFav, onDragAway }) {
       <button
         onClick={onTrash}
         title="Delete from library"
-        className="absolute bottom-3 right-[13px] cursor-pointer border-none bg-transparent p-0.5 text-[15px] text-[#c4ccd4] opacity-0 transition duration-[130ms] hover:text-danger group-hover:opacity-100"
+        className="absolute bottom-2 right-2 cursor-pointer border-none bg-transparent p-0.5 text-[13px] text-[#c4ccd4] opacity-50 transition duration-[130ms] hover:text-danger sm:bottom-3 sm:right-[13px] sm:text-[15px] sm:opacity-0 sm:group-hover:opacity-100"
       >
         🗑
       </button>
@@ -228,11 +228,11 @@ function AddFoodCard({ onAdd }) {
   };
 
   const inputCls = (bad) =>
-    "w-full rounded-[13px] border bg-white px-3 py-2.5 text-[15px] focus:border-accent focus:shadow-[0_0_0_3px_var(--color-accent-soft)] focus:outline-none " +
+    "w-full rounded-[11px] border bg-white px-2.5 py-2 text-sm focus:border-accent focus:shadow-[0_0_0_3px_var(--color-accent-soft)] focus:outline-none sm:rounded-[13px] sm:px-3 sm:py-2.5 sm:text-[15px] " +
     (bad ? "border-danger" : "border-line");
 
   return (
-    <div className="flex flex-col justify-center gap-[9px] rounded-2xl border-2 border-dashed border-line bg-[#fafcfd] px-[18px] pb-4 pt-[18px]">
+    <div className="col-span-2 flex flex-col justify-center gap-2 rounded-xl border-2 border-dashed border-line bg-[#fafcfd] px-3 pb-3 pt-3.5 sm:col-auto sm:gap-[9px] sm:rounded-2xl sm:px-[18px] sm:pb-4 sm:pt-[18px]">
       <input
         ref={nameRef}
         value={name}
@@ -279,7 +279,7 @@ function AddFoodCard({ onAdd }) {
         />
         <button
           onClick={submit}
-          className="cursor-pointer rounded-[11px] border-none bg-accent px-4 py-[11px] text-[15px] font-bold text-white"
+          className="cursor-pointer rounded-[11px] border-none bg-accent px-3.5 py-2 text-sm font-bold text-white sm:px-4 sm:py-[11px] sm:text-[15px]"
         >
           Add
         </button>
@@ -307,16 +307,16 @@ function LoggedEntry({ e, onEdit, onRemove }) {
       }}
       onClick={onEdit}
       className={
-        "flex cursor-pointer items-center justify-between rounded-[13px] border border-line2 bg-[#f8fafb] px-[15px] py-[13px] active:cursor-grabbing " +
+        "flex cursor-pointer items-center justify-between rounded-[11px] border border-line2 bg-[#f8fafb] px-2.5 py-2 active:cursor-grabbing sm:rounded-[13px] sm:px-[15px] sm:py-[13px] " +
         (dragging ? "opacity-45" : "")
       }
     >
-      <span className="text-base font-semibold">
+      <span className="min-w-0 break-words pr-2 text-sm font-semibold sm:text-base">
         {e.name}{" "}
-        <span className="ml-0.5 text-sm font-semibold text-muted">{amtLabel(e)}</span>
+        <span className="ml-0.5 text-xs font-semibold text-muted sm:text-sm">{amtLabel(e)}</span>
       </span>
-      <span className="flex items-center gap-[13px]">
-        <span className="text-[15px] tabular-nums text-muted">
+      <span className="flex flex-none items-center gap-2 sm:gap-[13px]">
+        <span className="text-[13px] tabular-nums text-muted sm:text-[15px]">
           {(+e.cal).toLocaleString()} kcal
         </span>
         <button
@@ -352,22 +352,22 @@ function MealCard({ meal, items, total, onDrop, onEditEntry, onRemoveEntry }) {
         onDrop(e.dataTransfer.getData("text/plain"));
       }}
       className={
-        "flex min-h-[360px] flex-col rounded-[18px] border-2 bg-white shadow-card transition " +
+        "flex min-h-[240px] flex-col rounded-2xl border-2 bg-white shadow-card transition sm:min-h-[360px] sm:rounded-[18px] " +
         (over
           ? "-translate-y-[3px] border-accent shadow-[0_0_0_4px_var(--color-accent-soft)]"
           : "border-line")
       }
     >
-      <h3 className="m-0 flex items-center justify-between border-b-2 border-line2 px-5 py-[18px] text-[19px] font-extrabold">
-        <span className="flex items-center gap-[11px]">
-          <span className="text-2xl">{meal.ic}</span>
+      <h3 className="m-0 flex items-center justify-between border-b-2 border-line2 px-3.5 py-3 text-base font-extrabold sm:px-5 sm:py-[18px] sm:text-[19px]">
+        <span className="flex items-center gap-2 sm:gap-[11px]">
+          <span className="text-xl sm:text-2xl">{meal.ic}</span>
           {meal.label}
         </span>
-        <span className="text-[15px] font-extrabold tabular-nums text-accent">
+        <span className="text-[13px] font-extrabold tabular-nums text-accent sm:text-[15px]">
           {total.toLocaleString()} kcal
         </span>
       </h3>
-      <div className="flex flex-1 flex-col gap-[9px] p-3.5">
+      <div className="flex flex-1 flex-col gap-2 p-2.5 sm:gap-[9px] sm:p-3.5">
         {items.length ? (
           items.map((e) => (
             <LoggedEntry
@@ -378,10 +378,82 @@ function MealCard({ meal, items, total, onDrop, onEditEntry, onRemoveEntry }) {
             />
           ))
         ) : (
-          <div className="flex min-h-[120px] flex-1 items-center justify-center rounded-[13px] border-2 border-dashed border-line text-center text-[15px] text-[#aab2bb]">
-            Drop food here
+          <div className="flex min-h-[100px] flex-1 items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-sm text-[#aab2bb] sm:min-h-[120px] sm:text-[15px]">
+            <span className="sm:hidden">Nothing yet — tap ＋ on a food below</span>
+            <span className="hidden sm:inline">Drop food here</span>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// Mobile-only pager: one meal bucket per screen, swipe (scroll-snap) to move
+// between meals, or tap a chip in the segmented bar to jump straight there.
+function MobileMealPager({ totals, renderCard }) {
+  const scroller = useRef(null);
+  const [active, setActive] = useState(0);
+
+  const onScroll = () => {
+    const el = scroller.current;
+    if (!el) return;
+    const i = Math.round(el.scrollLeft / el.clientWidth);
+    setActive(Math.max(0, Math.min(MEALS.length - 1, i)));
+  };
+
+  const goTo = (i) => {
+    const el = scroller.current;
+    el?.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+  };
+
+  return (
+    <div>
+      <div className="mb-2.5 grid grid-cols-4 gap-1 rounded-2xl bg-[#e1e6ec] p-1">
+        {MEALS.map((m, i) => (
+          <button
+            key={m.key}
+            onClick={() => goTo(i)}
+            className={
+              "flex cursor-pointer flex-col items-center rounded-xl border-none px-0.5 py-1.5 leading-tight transition " +
+              (i === active ? "bg-white shadow-card" : "bg-transparent")
+            }
+          >
+            <span className="text-base">{m.ic}</span>
+            <span className={"text-[10px] font-bold " + (i === active ? "text-ink" : "text-muted")}>
+              {m.label}
+            </span>
+            <span
+              className={
+                "text-[10px] font-extrabold tabular-nums " +
+                (i === active ? "text-accent" : "text-[#98a1ab]")
+              }
+            >
+              {totals[i] ? totals[i].toLocaleString() : "·"}
+            </span>
+          </button>
+        ))}
+      </div>
+      <div
+        ref={scroller}
+        onScroll={onScroll}
+        className="no-scrollbar -mx-1 flex snap-x snap-mandatory overflow-x-auto"
+      >
+        {MEALS.map((m) => (
+          <div key={m.key} className="w-full flex-none snap-center px-1">
+            {renderCard(m)}
+          </div>
+        ))}
+      </div>
+      <div className="mt-2.5 flex justify-center gap-1.5">
+        {MEALS.map((m, i) => (
+          <span
+            key={m.key}
+            className={
+              "h-1.5 rounded-full transition-all duration-200 " +
+              (i === active ? "w-4 bg-accent" : "w-1.5 bg-[#c9d0d8]")
+            }
+          />
+        ))}
       </div>
     </div>
   );
@@ -396,10 +468,15 @@ function Hero({ total, goal, onEditGoal }) {
   const color =
     pct > 1 ? "var(--color-danger)" : pct >= 0.85 ? "var(--color-amber)" : "var(--color-accent)";
 
+  const label = "text-[11px] font-bold uppercase tracking-[0.5px] text-muted sm:text-sm";
+  const value = "text-lg font-extrabold tabular-nums sm:text-[34px] sm:tracking-[-1px]";
+  const stat =
+    "flex items-baseline justify-between gap-2 sm:flex-col sm:items-start sm:justify-start sm:gap-1";
+
   return (
-    <div className="mb-6 flex flex-wrap items-center gap-[46px] rounded-[18px] border border-line bg-gradient-to-br from-white to-[#f6fbf8] px-8 py-[26px] shadow-pop">
-      <div className="relative h-[168px] w-[168px] flex-none">
-        <svg width="168" height="168" viewBox="0 0 168 168" className="-rotate-90">
+    <div className="mb-4 flex items-center gap-4 rounded-[18px] border border-line bg-gradient-to-br from-white to-[#f6fbf8] px-4 py-4 shadow-pop sm:mb-6 sm:flex-wrap sm:gap-[46px] sm:px-8 sm:py-[26px]">
+      <div className="relative h-[118px] w-[118px] flex-none sm:h-[168px] sm:w-[168px]">
+        <svg viewBox="0 0 168 168" className="h-full w-full -rotate-90">
           <circle cx="84" cy="84" r="72" fill="none" stroke="#edf1f4" strokeWidth="15" />
           <circle
             cx="84"
@@ -414,45 +491,36 @@ function Hero({ total, goal, onEditGoal }) {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-[42px] font-extrabold leading-none tracking-[-1.5px]">
+          <span className="text-[27px] font-extrabold leading-none tracking-[-1px] sm:text-[42px] sm:tracking-[-1.5px]">
             {total.toLocaleString()}
           </span>
-          <span className="mt-1 text-sm font-bold text-muted">of {goal.toLocaleString()}</span>
+          <span className="mt-0.5 text-[11px] font-bold text-muted sm:mt-1 sm:text-sm">
+            of {goal.toLocaleString()}
+          </span>
         </div>
       </div>
-      <div className="flex min-w-[300px] flex-1 flex-wrap gap-10">
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-bold uppercase tracking-[0.5px] text-muted">Consumed</span>
-          <span className="text-[34px] font-extrabold tabular-nums tracking-[-1px]">
-            {total.toLocaleString()}
-          </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:min-w-[300px] sm:flex-row sm:flex-wrap sm:gap-10">
+        <div className={stat}>
+          <span className={label}>Consumed</span>
+          <span className={value}>{total.toLocaleString()}</span>
         </div>
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-bold uppercase tracking-[0.5px] text-muted">
-            {rem >= 0 ? "Remaining" : "Over by"}
-          </span>
-          <span
-            className={
-              "text-[34px] font-extrabold tabular-nums tracking-[-1px] " +
-              (rem >= 0 ? "text-accent" : "text-danger")
-            }
-          >
+        <div className={stat}>
+          <span className={label}>{rem >= 0 ? "Remaining" : "Over by"}</span>
+          <span className={value + " " + (rem >= 0 ? "text-accent" : "text-danger")}>
             {Math.abs(rem).toLocaleString()}
           </span>
         </div>
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-bold uppercase tracking-[0.5px] text-muted">
-            Daily goal
+        <div className={stat}>
+          <span className={label}>Daily goal</span>
+          <span className="flex items-center gap-2">
+            <span className={value}>{goal.toLocaleString()}</span>
+            <button
+              onClick={onEditGoal}
+              className="cursor-pointer rounded-[9px] border-none bg-accent-soft px-2 py-1 text-[11px] font-bold text-accent sm:px-3 sm:py-[5px] sm:text-[13px]"
+            >
+              edit
+            </button>
           </span>
-          <span className="text-[34px] font-extrabold tabular-nums tracking-[-1px]">
-            {goal.toLocaleString()}
-          </span>
-          <button
-            onClick={onEditGoal}
-            className="mt-1.5 cursor-pointer self-start rounded-[9px] border-none bg-accent-soft px-3 py-[5px] text-[13px] font-bold text-accent"
-          >
-            edit goal
-          </button>
         </div>
       </div>
     </div>
@@ -594,26 +662,38 @@ export default function TodayTab({ data, update }) {
     onFav: () => toggleFav(f.id),
   });
 
+  const mealCard = (m) => (
+    <MealCard
+      key={m.key}
+      meal={m}
+      items={entriesFor(logs, k).filter((e) => e.meal === m.key)}
+      total={mealTotal(logs, k, m.key)}
+      onDrop={(payload) => handleDrop(payload, m.key)}
+      onEditEntry={(e) => setAmtCtx({ kind: "edit", entry: e })}
+      onRemoveEntry={removeEntry}
+    />
+  );
+
   return (
     <section className="animate-fade">
       {/* Date bar */}
-      <div className="mb-[22px] flex items-center justify-center gap-[18px]">
+      <div className="mb-3.5 flex items-center justify-center gap-2.5 sm:mb-[22px] sm:gap-[18px]">
         <button
           onClick={() => shiftDay(-1)}
-          className="h-[50px] w-[50px] cursor-pointer rounded-[13px] border border-line bg-white text-2xl text-ink shadow-card"
+          className="h-10 w-10 flex-none cursor-pointer rounded-[11px] border border-line bg-white text-xl text-ink shadow-card sm:h-[50px] sm:w-[50px] sm:rounded-[13px] sm:text-2xl"
         >
           ‹
         </button>
-        <div className="min-w-[340px] text-center text-[22px] font-extrabold">
+        <div className="min-w-0 flex-1 text-center text-lg font-extrabold sm:min-w-[340px] sm:flex-none sm:text-[22px]">
           {curKey === todayKey ? "Today" : fmtLong(cur)}
-          <small className="mt-0.5 block text-sm font-semibold text-muted">
+          <small className="mt-0.5 block text-xs font-semibold text-muted sm:text-sm">
             {curKey === todayKey ? fmtLong(cur) : " "}
           </small>
         </div>
         <button
           onClick={() => shiftDay(1)}
           disabled={curKey >= todayKey}
-          className="h-[50px] w-[50px] cursor-pointer rounded-[13px] border border-line bg-white text-2xl text-ink shadow-card disabled:cursor-default disabled:opacity-30"
+          className="h-10 w-10 flex-none cursor-pointer rounded-[11px] border border-line bg-white text-xl text-ink shadow-card disabled:cursor-default disabled:opacity-30 sm:h-[50px] sm:w-[50px] sm:rounded-[13px] sm:text-2xl"
         >
           ›
         </button>
@@ -621,19 +701,15 @@ export default function TodayTab({ data, update }) {
 
       <Hero total={total} goal={goal} onEditGoal={editGoal} />
 
-      {/* Meal buckets */}
-      <div className="mb-[30px] grid grid-cols-1 gap-[18px] min-[620px]:grid-cols-2 min-[1100px]:grid-cols-4">
-        {MEALS.map((m) => (
-          <MealCard
-            key={m.key}
-            meal={m}
-            items={entriesFor(logs, k).filter((e) => e.meal === m.key)}
-            total={mealTotal(logs, k, m.key)}
-            onDrop={(payload) => handleDrop(payload, m.key)}
-            onEditEntry={(e) => setAmtCtx({ kind: "edit", entry: e })}
-            onRemoveEntry={removeEntry}
-          />
-        ))}
+      {/* Meal buckets — swipeable pager on phones, grid on wider screens */}
+      <div className="mb-5 sm:hidden">
+        <MobileMealPager
+          totals={MEALS.map((m) => mealTotal(logs, k, m.key))}
+          renderCard={mealCard}
+        />
+      </div>
+      <div className="mb-[30px] hidden gap-[18px] sm:grid sm:grid-cols-2 min-[1100px]:grid-cols-4">
+        {MEALS.map(mealCard)}
       </div>
 
       {/* Favorites bucket */}
@@ -652,54 +728,58 @@ export default function TodayTab({ data, update }) {
           dropOnFavs(e.dataTransfer.getData("text/plain"));
         }}
         className={
-          "mb-[30px] flex flex-col rounded-[18px] border-2 bg-white shadow-card transition " +
+          "mb-5 flex flex-col rounded-2xl border-2 bg-white shadow-card transition sm:mb-[30px] sm:rounded-[18px] " +
           (favOver
             ? "-translate-y-[3px] border-[#ef4444] shadow-[0_0_0_4px_#fde8ea]"
             : "border-[#f3d0d4]")
         }
       >
-        <h3 className="m-0 flex items-center justify-between border-b-2 border-[#f6e0e2] px-5 py-[18px] text-[19px] font-extrabold">
-          <span className="flex items-center gap-[11px]">
-            <span className="text-2xl">❤️</span>Favorites
+        <h3 className="m-0 flex items-center justify-between border-b-2 border-[#f6e0e2] px-3.5 py-3 text-base font-extrabold sm:px-5 sm:py-[18px] sm:text-[19px]">
+          <span className="flex items-center gap-2 sm:gap-[11px]">
+            <span className="text-xl sm:text-2xl">❤️</span>Favorites
           </span>
-          <span className="text-[15px] font-extrabold tabular-nums text-[#ef4444]">
+          <span className="text-[13px] font-extrabold tabular-nums text-[#ef4444] sm:text-[15px]">
             {favs.length || ""}
           </span>
         </h3>
-        <div className="p-3.5">
+        <div className="p-2.5 sm:p-3.5">
           {favs.length ? (
-            <div className="grid w-full grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3.5">
+            <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:gap-3.5">
               {favs.map((f) => (
                 <FoodCard key={f.id} {...cardProps(f)} onDragAway={() => toggleFav(f.id)} />
               ))}
             </div>
           ) : (
-            <div className="flex min-h-[120px] items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-[15px] text-[#aab2bb]">
-              Drag a food here — or tap its ♡ — to keep it here for quick logging
+            <div className="flex min-h-[90px] items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-sm text-[#aab2bb] sm:min-h-[120px] sm:text-[15px]">
+              <span className="sm:hidden">Tap a food's ♡ to keep it here for quick logging</span>
+              <span className="hidden sm:inline">
+                Drag a food here — or tap its ♡ — to keep it here for quick logging
+              </span>
             </div>
           )}
         </div>
       </div>
 
       {/* Library */}
-      <div className="mx-1 mb-4 mt-1.5 flex flex-wrap items-center justify-between gap-2.5">
-        <span className="text-[17px] font-extrabold uppercase tracking-[0.6px] text-muted">
+      <div className="mx-1 mb-3 mt-1.5 flex flex-wrap items-center justify-between gap-2.5 sm:mb-4">
+        <span className="text-sm font-extrabold uppercase tracking-[0.6px] text-muted sm:text-[17px]">
           Food library
         </span>
-        <span className="text-sm text-muted">
-          drag a card up into a meal — or tap ＋ to choose
+        <span className="text-xs text-muted sm:text-sm">
+          <span className="sm:hidden">tap ＋ on a card to log it</span>
+          <span className="hidden sm:inline">drag a card up into a meal — or tap ＋ to choose</span>
         </span>
       </div>
-      <div className="mb-[18px] max-w-[420px]">
+      <div className="mb-3 max-w-[420px] sm:mb-[18px]">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search foods…"
           autoComplete="off"
-          className="w-full rounded-[13px] border border-line bg-white px-4 py-3.5 text-base text-ink focus:border-accent focus:shadow-[0_0_0_3px_var(--color-accent-soft)] focus:outline-none"
+          className="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-[15px] text-ink focus:border-accent focus:shadow-[0_0_0_3px_var(--color-accent-soft)] focus:outline-none sm:rounded-[13px] sm:px-4 sm:py-3.5 sm:text-base"
         />
       </div>
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(210px,1fr))] sm:gap-4">
         {libList.map((f) => (
           <FoodCard key={f.id} {...cardProps(f)} />
         ))}

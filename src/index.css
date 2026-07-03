@@ -27,10 +27,25 @@
 
 html {
   color-scheme: light;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   @apply bg-page text-ink font-sans antialiased;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.45;
+}
+
+@media (min-width: 640px) {
+  body {
+    font-size: 18px;
+  }
+}
+
+/* Hide the scrollbar on the mobile meal pager (still scrollable). */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

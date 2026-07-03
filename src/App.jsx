@@ -121,7 +121,7 @@ export default function App() {
   }
 
   return (
-    <div className="mx-auto max-w-[1680px] px-[34px] pb-[60px] pt-[max(26px,env(safe-area-inset-top))]">
+    <div className="mx-auto max-w-[1680px] px-4 pb-10 pt-[max(14px,env(safe-area-inset-top))] sm:px-[34px] sm:pb-[60px] sm:pt-[max(26px,env(safe-area-inset-top))]">
       <TopBar
         tab={tab}
         onTab={setTab}
