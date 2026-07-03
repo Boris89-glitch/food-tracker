@@ -14,6 +14,11 @@ import {
   uid,
 } from "../lib/model.js";
 
+// True once the current drag lands on a meal bucket. dragend checks it: still
+// false means the card was dragged away → remove the entry / unfavorite.
+// Module-level is safe: only one drag can be in flight at a time.
+let dragValidDrop = false;
+
 // ── Modals ──────────────────────────────────────────────────────────────────
 
 function Overlay({ onClose, children }) {
@@ -132,16 +137,20 @@ function AmountModal({ ctx, onCommit, onClose }) {
 
 // ── Food cards (library + favorites) ────────────────────────────────────────
 
-function FoodCard({ f, onAdd, onTrash, onFav }) {
+function FoodCard({ f, onAdd, onTrash, onFav, onDragAway }) {
   const [dragging, setDragging] = useState(false);
   return (
     <div
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData("text/plain", "food:" + f.id);
+        dragValidDrop = false;
         setDragging(true);
       }}
-      onDragEnd={() => setDragging(false)}
+      onDragEnd={() => {
+        setDragging(false);
+        if (!dragValidDrop) onDragAway?.();
+      }}
       className={
         "group relative cursor-grab select-none rounded-2xl border border-line bg-white px-[18px] pb-4 pt-[18px] shadow-card transition duration-[130ms] hover:-translate-y-[3px] hover:border-[#d2d9e0] hover:shadow-pop active:cursor-grabbing " +
         (dragging ? "opacity-40" : "")
@@ -288,9 +297,13 @@ function LoggedEntry({ e, onEdit, onRemove }) {
       title="Tap to edit amount"
       onDragStart={(ev) => {
         ev.dataTransfer.setData("text/plain", "entry:" + e.id);
+        dragValidDrop = false;
         setDragging(true);
       }}
-      onDragEnd={() => setDragging(false)}
+      onDragEnd={() => {
+        setDragging(false);
+        if (!dragValidDrop) onRemove();
+      }}
       onClick={onEdit}
       className={
         "flex cursor-pointer items-center justify-between rounded-[13px] border border-line2 bg-[#f8fafb] px-[15px] py-[13px] active:cursor-grabbing " +
@@ -334,6 +347,7 @@ function MealCard({ meal, items, total, onDrop, onEditEntry, onRemoveEntry }) {
       onDrop={(e) => {
         e.preventDefault();
         setOver(false);
+        dragValidDrop = true;
         onDrop(e.dataTransfer.getData("text/plain"));
       }}
       className={
@@ -618,7 +632,7 @@ export default function TodayTab({ data, update }) {
           {favs.length ? (
             <div className="grid w-full grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-3.5">
               {favs.map((f) => (
-                <FoodCard key={f.id} {...cardProps(f)} />
+                <FoodCard key={f.id} {...cardProps(f)} onDragAway={() => toggleFav(f.id)} />
               ))}
             </div>
           ) : (
