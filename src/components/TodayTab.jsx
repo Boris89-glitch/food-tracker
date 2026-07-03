@@ -14,8 +14,9 @@ import {
   uid,
 } from "../lib/model.js";
 
-// True once the current drag lands on a meal bucket. dragend checks it: still
-// false means the card was dragged away → remove the entry / unfavorite.
+// True once the current drag lands on a valid target (meal bucket or the
+// Favorites bucket). dragend checks it: still false means the card was
+// dragged away → remove the entry / unfavorite.
 // Module-level is safe: only one drag can be in flight at a time.
 let dragValidDrop = false;
 
@@ -467,6 +468,7 @@ export default function TodayTab({ data, update }) {
   const [search, setSearch] = useState("");
   const [pickerFood, setPickerFood] = useState(null);
   const [amtCtx, setAmtCtx] = useState(null);
+  const [favOver, setFavOver] = useState(false);
 
   const cur = dayFromKey(curKey);
   const todayKey = dateKey(today);
@@ -556,6 +558,20 @@ export default function TodayTab({ data, update }) {
     }));
   };
 
+  // Drop onto the Favorites bucket: a library card favorites that food; a
+  // logged entry favorites the matching food (the entry itself stays logged).
+  const dropOnFavs = (payload) => {
+    if (!payload) return;
+    let food = null;
+    if (payload.startsWith("food:")) {
+      food = foods.find((x) => x.id === payload.slice(5));
+    } else if (payload.startsWith("entry:")) {
+      const e = entriesFor(logs, k).find((x) => x.id === payload.slice(6));
+      if (e) food = foods.find((x) => x.name === e.name);
+    }
+    if (food && !food.fav) toggleFav(food.id);
+  };
+
   const editGoal = () => {
     const v = prompt("Daily calorie goal:", goal);
     if (v === null) return;
@@ -619,7 +635,27 @@ export default function TodayTab({ data, update }) {
       </div>
 
       {/* Favorites bucket */}
-      <div className="mb-[30px] flex flex-col rounded-[18px] border-2 border-[#f3d0d4] bg-white shadow-card">
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setFavOver(true);
+        }}
+        onDragLeave={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) setFavOver(false);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          setFavOver(false);
+          dragValidDrop = true;
+          dropOnFavs(e.dataTransfer.getData("text/plain"));
+        }}
+        className={
+          "mb-[30px] flex flex-col rounded-[18px] border-2 bg-white shadow-card transition " +
+          (favOver
+            ? "-translate-y-[3px] border-[#ef4444] shadow-[0_0_0_4px_#fde8ea]"
+            : "border-[#f3d0d4]")
+        }
+      >
         <h3 className="m-0 flex items-center justify-between border-b-2 border-[#f6e0e2] px-5 py-[18px] text-[19px] font-extrabold">
           <span className="flex items-center gap-[11px]">
             <span className="text-2xl">❤️</span>Favorites
@@ -637,7 +673,7 @@ export default function TodayTab({ data, update }) {
             </div>
           ) : (
             <div className="flex min-h-[120px] items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-[15px] text-[#aab2bb]">
-              Tap the ♡ on any food below to keep it here for quick logging
+              Drag a food here — or tap its ♡ — to keep it here for quick logging
             </div>
           )}
         </div>
