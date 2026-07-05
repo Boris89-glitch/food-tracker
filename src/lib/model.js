@@ -66,6 +66,15 @@ export const MEALS = [
 // Translated label for a meal key (or a MEALS entry).
 export const mealLabel = (m) => t(`meal.${typeof m === "string" ? m : m.key}`);
 
+// Which meal bucket to show by default, from the local hour: breakfast in the
+// morning, lunch from noon, dinner from 18:00. (Index into MEALS.)
+export const defaultMealIndex = (d = new Date()) => {
+  const h = d.getHours();
+  if (h >= 18) return 3; // dinner
+  if (h >= 12) return 1; // lunch
+  return 0; // breakfast
+};
+
 const pad = (n) => String(n).padStart(2, "0");
 export const dateKey = (d) =>
   `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;

@@ -6,6 +6,7 @@ import {
   dateKey,
   dayFromKey,
   dayTotal,
+  defaultMealIndex,
   entriesFor,
   fmtLong,
   mealLabel,
@@ -457,7 +458,19 @@ function MealCard({ meal, items, total, onDrop, onAdd, onEditEntry, onRemoveEntr
 // between meals, or tap a chip in the segmented bar to jump straight there.
 function MobileMealPager({ totals, renderCard }) {
   const scroller = useRef(null);
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(defaultMealIndex);
+
+  // Open on the time-of-day bucket (breakfast → lunch → dinner). A fresh load
+  // on a new morning lands on breakfast again.
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const i = defaultMealIndex();
+    setActive(i);
+    requestAnimationFrame(() => {
+      el.scrollLeft = i * el.clientWidth;
+    });
+  }, []);
 
   const onScroll = () => {
     const el = scroller.current;

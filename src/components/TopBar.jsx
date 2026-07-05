@@ -1,6 +1,29 @@
+import { useEffect, useState } from "react";
 import { LANGS, useI18n } from "../lib/i18n.js";
 
 const TABS = ["today", "weight", "history"];
+
+// Live digital clock: bold tabular time with a colon that blinks each second.
+function Clock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const colon = now.getSeconds() % 2 === 0;
+  return (
+    <div className="flex items-center gap-2 rounded-[12px] border border-line bg-gradient-to-br from-white to-[#f6fbf8] px-3 py-2 shadow-card">
+      <span className="h-2 w-2 flex-none animate-pulse rounded-full bg-accent2" />
+      <span className="text-[15px] font-extrabold tabular-nums tracking-[-0.5px] sm:text-[17px]">
+        {hh}
+        <span className={"px-px " + (colon ? "opacity-100" : "opacity-20")}>:</span>
+        {mm}
+      </span>
+    </div>
+  );
+}
 
 export default function TopBar({ tab, onTab, unit, onToggleUnit, user, synced, onSignOut }) {
   const { lang, setLang, t } = useI18n();
@@ -10,6 +33,7 @@ export default function TopBar({ tab, onTab, unit, onToggleUnit, user, synced, o
       <h1 className="flex items-center gap-2 whitespace-nowrap text-xl font-extrabold tracking-[-0.5px] sm:gap-3 sm:text-3xl">
         🍽️ Food Tracker
       </h1>
+      <Clock />
       {/* On phones the tab switcher drops to its own full-width row. */}
       <div className="order-last flex w-full gap-1 rounded-[13px] bg-[#e1e6ec] p-1 sm:order-none sm:w-auto sm:gap-1.5 sm:rounded-[15px] sm:p-[5px]">
         {TABS.map((id) => (
