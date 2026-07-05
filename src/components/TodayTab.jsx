@@ -703,15 +703,12 @@ export default function TodayTab({ data, update }) {
 
       {/* Meals (left) + Favorites (right on desktop) */}
       <div className="mb-5 flex flex-col gap-5 sm:mb-[30px] sm:gap-[18px] lg:flex-row lg:items-start">
-        {/* Meal buckets — swipeable pager on phones, stacked column on wider screens */}
+        {/* Meal buckets — one at a time via the chip pager on every screen size */}
         <div className="min-w-0 flex-1">
-          <div className="sm:hidden">
-            <MobileMealPager
-              totals={MEALS.map((m) => mealTotal(logs, k, m.key))}
-              renderCard={mealCard}
-            />
-          </div>
-          <div className="hidden flex-col gap-[18px] sm:flex">{MEALS.map(mealCard)}</div>
+          <MobileMealPager
+            totals={MEALS.map((m) => mealTotal(logs, k, m.key))}
+            renderCard={mealCard}
+          />
         </div>
 
         {/* Favorites bucket — below on phones/tablets, to the right on desktop */}
