@@ -114,8 +114,8 @@ export default function HistoryTab({ data, visible }) {
         <p className={sectit}>{t("dayByDay")}</p>
         {historyKeys.length ? (
           historyKeys.map((k) => {
-            const t = dayTotal(logs, k);
-            const over = t > goal;
+            const tot = dayTotal(logs, k);
+            const over = tot > goal;
             return (
               <div
                 key={k}
@@ -129,7 +129,7 @@ export default function HistoryTab({ data, visible }) {
                 </span>
                 <span className="text-muted">
                   <b style={{ color: over ? "var(--color-danger)" : "var(--color-ink)" }}>
-                    {t.toLocaleString()}
+                    {tot.toLocaleString()}
                   </b>{" "}
                   / {goal.toLocaleString()} kcal
                 </span>
