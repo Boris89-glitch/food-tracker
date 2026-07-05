@@ -701,62 +701,65 @@ export default function TodayTab({ data, update }) {
 
       <Hero total={total} goal={goal} onEditGoal={editGoal} />
 
-      {/* Meal buckets — swipeable pager on phones, grid on wider screens */}
-      <div className="mb-5 sm:hidden">
-        <MobileMealPager
-          totals={MEALS.map((m) => mealTotal(logs, k, m.key))}
-          renderCard={mealCard}
-        />
-      </div>
-      <div className="mb-[30px] hidden gap-[18px] sm:grid sm:grid-cols-2 min-[1100px]:grid-cols-4">
-        {MEALS.map(mealCard)}
-      </div>
+      {/* Meals (left) + Favorites (right on desktop) */}
+      <div className="mb-5 flex flex-col gap-5 sm:mb-[30px] sm:gap-[18px] lg:flex-row lg:items-start">
+        {/* Meal buckets — swipeable pager on phones, stacked column on wider screens */}
+        <div className="min-w-0 flex-1">
+          <div className="sm:hidden">
+            <MobileMealPager
+              totals={MEALS.map((m) => mealTotal(logs, k, m.key))}
+              renderCard={mealCard}
+            />
+          </div>
+          <div className="hidden flex-col gap-[18px] sm:flex">{MEALS.map(mealCard)}</div>
+        </div>
 
-      {/* Favorites bucket */}
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setFavOver(true);
-        }}
-        onDragLeave={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget)) setFavOver(false);
-        }}
-        onDrop={(e) => {
-          e.preventDefault();
-          setFavOver(false);
-          dragValidDrop = true;
-          dropOnFavs(e.dataTransfer.getData("text/plain"));
-        }}
-        className={
-          "mb-5 flex flex-col rounded-2xl border-2 bg-white shadow-card transition sm:mb-[30px] sm:rounded-[18px] " +
-          (favOver
-            ? "-translate-y-[3px] border-[#ef4444] shadow-[0_0_0_4px_#fde8ea]"
-            : "border-[#f3d0d4]")
-        }
-      >
-        <h3 className="m-0 flex items-center justify-between border-b-2 border-[#f6e0e2] px-3.5 py-3 text-base font-extrabold sm:px-5 sm:py-[18px] sm:text-[19px]">
-          <span className="flex items-center gap-2 sm:gap-[11px]">
-            <span className="text-xl sm:text-2xl">❤️</span>Favorites
-          </span>
-          <span className="text-[13px] font-extrabold tabular-nums text-[#ef4444] sm:text-[15px]">
-            {favs.length || ""}
-          </span>
-        </h3>
-        <div className="p-2.5 sm:p-3.5">
-          {favs.length ? (
-            <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:gap-3.5">
-              {favs.map((f) => (
-                <FoodCard key={f.id} {...cardProps(f)} onDragAway={() => toggleFav(f.id)} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex min-h-[90px] items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-sm text-[#aab2bb] sm:min-h-[120px] sm:text-[15px]">
-              <span className="sm:hidden">Tap a food's ♡ to keep it here for quick logging</span>
-              <span className="hidden sm:inline">
-                Drag a food here — or tap its ♡ — to keep it here for quick logging
-              </span>
-            </div>
-          )}
+        {/* Favorites bucket — below on phones/tablets, to the right on desktop */}
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setFavOver(true);
+          }}
+          onDragLeave={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) setFavOver(false);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            setFavOver(false);
+            dragValidDrop = true;
+            dropOnFavs(e.dataTransfer.getData("text/plain"));
+          }}
+          className={
+            "flex flex-col rounded-2xl border-2 bg-white shadow-card transition sm:rounded-[18px] lg:w-[360px] lg:flex-none " +
+            (favOver
+              ? "-translate-y-[3px] border-[#ef4444] shadow-[0_0_0_4px_#fde8ea]"
+              : "border-[#f3d0d4]")
+          }
+        >
+          <h3 className="m-0 flex items-center justify-between border-b-2 border-[#f6e0e2] px-3.5 py-3 text-base font-extrabold sm:px-5 sm:py-[18px] sm:text-[19px]">
+            <span className="flex items-center gap-2 sm:gap-[11px]">
+              <span className="text-xl sm:text-2xl">❤️</span>Favorites
+            </span>
+            <span className="text-[13px] font-extrabold tabular-nums text-[#ef4444] sm:text-[15px]">
+              {favs.length || ""}
+            </span>
+          </h3>
+          <div className="p-2.5 sm:p-3.5">
+            {favs.length ? (
+              <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:gap-3.5 lg:grid-cols-1">
+                {favs.map((f) => (
+                  <FoodCard key={f.id} {...cardProps(f)} onDragAway={() => toggleFav(f.id)} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex min-h-[90px] items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-sm text-[#aab2bb] sm:min-h-[120px] sm:text-[15px]">
+                <span className="sm:hidden">Tap a food's ♡ to keep it here for quick logging</span>
+                <span className="hidden sm:inline">
+                  Drag a food here — or tap its ♡ — to keep it here for quick logging
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
