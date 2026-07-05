@@ -7,7 +7,13 @@
 //     them. See SETUP.md for the full walkthrough.
 // ─────────────────────────────────────────────────────────────────────────
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import {
+  GoogleAuthProvider,
+  getAuth,
+  getRedirectResult,
+  signInWithPopup,
+  signInWithRedirect,
+} from "firebase/auth";
 import {
   initializeFirestore,
   persistentLocalCache,
@@ -36,3 +42,24 @@ if (CONFIGURED) {
     localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
   });
 }
+
+// Kick off Google sign-in. Tries a popup first; if the environment blocks it
+// (common in in-app browsers / privacy tools), falls back to a full redirect.
+export function signInWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  return signInWithPopup(auth, provider).catch((e) => {
+    if (
+      e &&
+      (e.code === "auth/popup-blocked" ||
+        e.code === "auth/cancelled-popup-request" ||
+        e.code === "auth/operation-not-supported-in-this-environment")
+    ) {
+      return signInWithRedirect(auth, provider);
+    }
+    throw e;
+  });
+}
+
+// Completes a redirect-based sign-in when the app reloads after one.
+export const completeGoogleRedirect = () =>
+  CONFIGURED ? getRedirectResult(auth) : Promise.resolve(null);

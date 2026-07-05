@@ -1,21 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, signOut as fbSignOut } from "firebase/auth";
 import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
-import { CONFIGURED, auth, db } from "./firebase.js";
+import { CONFIGURED, auth, db, completeGoogleRedirect, signInWithGoogle } from "./firebase.js";
 import { loadInitialData, writeLS } from "./lib/model.js";
-import AuthGate from "./components/AuthGate.jsx";
+import Splash from "./components/Splash.jsx";
 import TopBar from "./components/TopBar.jsx";
 import TodayTab from "./components/TodayTab.jsx";
 import WeightTab from "./components/WeightTab.jsx";
 import HistoryTab from "./components/HistoryTab.jsx";
 
 export default function App() {
-  // user: undefined = auth state unknown yet, null = signed out,
-  // "local" = offline/local-only mode, otherwise the Firebase user.
+  // user: undefined = auth state unknown yet (first paint only), null = signed
+  // out / local-only mode, otherwise the Firebase user. Signed-out is a fully
+  // usable local mode — sign-in is optional and only enables cloud sync.
   const [user, setUser] = useState(CONFIGURED ? undefined : null);
   const [data, setData] = useState(loadInitialData);
   const [synced, setSynced] = useState(true);
   const [tab, setTab] = useState("today");
+  const [signInErr, setSignInErr] = useState("");
 
   const userRef = useRef(null);
   const saveTimer = useRef(null);
@@ -53,6 +55,11 @@ export default function App() {
   useEffect(() => {
     if (!CONFIGURED) return;
     let unsubSnap = null;
+
+    // Finish any redirect-based sign-in from a previous page load.
+    completeGoogleRedirect().catch((e) => {
+      if (e) setSignInErr(e.message || "");
+    });
 
     const unsubAuth = onAuthStateChanged(auth, (u) => {
       if (unsubSnap) {
@@ -110,15 +117,22 @@ export default function App() {
     };
   }, []);
 
+  const signIn = useCallback(() => {
+    setSignInErr("");
+    signInWithGoogle().catch((e) => {
+      if (e && e.code === "auth/popup-closed-by-user") return;
+      setSignInErr((e && e.message) || "");
+    });
+  }, []);
+
   const signOut = useCallback(() => {
     userRef.current = null;
     fbSignOut(auth);
   }, []);
 
-  const signedIn = user === "local" || (user && user !== "local");
-  if (!signedIn) {
-    return <AuthGate loading={user === undefined} onLocal={() => setUser("local")} />;
-  }
+  // Show a branded splash only while the very first auth check is pending, so
+  // the app never flashes signed-out UI before Firebase restores the session.
+  if (user === undefined) return <Splash />;
 
   return (
     <div className="mx-auto max-w-[1680px] px-4 pb-10 pt-[max(14px,env(safe-area-inset-top))] sm:px-[34px] sm:pb-[60px] sm:pt-[max(26px,env(safe-area-inset-top))]">
@@ -127,8 +141,11 @@ export default function App() {
         onTab={setTab}
         unit={data.unit}
         onToggleUnit={() => update((d) => ({ ...d, unit: d.unit === "kg" ? "lb" : "kg" }))}
-        user={user === "local" ? null : user}
+        user={user}
         synced={synced}
+        canSignIn={CONFIGURED}
+        onSignIn={signIn}
+        signInErr={signInErr}
         onSignOut={signOut}
       />
       <div className={tab === "today" ? "" : "hidden"}>

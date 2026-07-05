@@ -25,7 +25,18 @@ function Clock() {
   );
 }
 
-export default function TopBar({ tab, onTab, unit, onToggleUnit, user, synced, onSignOut }) {
+export default function TopBar({
+  tab,
+  onTab,
+  unit,
+  onToggleUnit,
+  user,
+  synced,
+  canSignIn,
+  onSignIn,
+  signInErr,
+  onSignOut,
+}) {
   const { lang, setLang, t } = useI18n();
   const nextLang = LANGS[(LANGS.findIndex((l) => l.code === lang) + 1) % LANGS.length];
   return (
@@ -63,7 +74,7 @@ export default function TopBar({ tab, onTab, unit, onToggleUnit, user, synced, o
       >
         {t("unit", { unit })}
       </button>
-      {user && (
+      {user ? (
         <div className="flex items-center gap-2 rounded-xl border border-line bg-white py-1.5 pl-1.5 pr-2 shadow-card sm:gap-2.5">
           <span
             className={"h-2 w-2 flex-none rounded-full " + (synced ? "bg-accent2" : "bg-[#c4ccd4]")}
@@ -87,6 +98,16 @@ export default function TopBar({ tab, onTab, unit, onToggleUnit, user, synced, o
             {t("signOut")}
           </button>
         </div>
+      ) : (
+        canSignIn && (
+          <button
+            onClick={onSignIn}
+            title={signInErr || undefined}
+            className="cursor-pointer rounded-[11px] border border-accent bg-accent px-3 py-2 text-[13px] font-bold text-white shadow-card hover:opacity-90 sm:px-4 sm:py-[9px] sm:text-[15px]"
+          >
+            {t("signInToSave")}
+          </button>
+        )
       )}
     </div>
   );
