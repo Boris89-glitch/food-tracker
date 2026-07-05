@@ -443,7 +443,7 @@ function MealCard({ meal, items, total, onDrop, onAdd, onEditEntry, onRemoveEntr
           onClick={onAdd}
           title={t("addFood")}
           className={
-            "mx-auto flex h-12 w-12 flex-none items-center justify-center rounded-full border-none bg-accent text-3xl leading-none text-white shadow-card transition active:scale-95 sm:hidden " +
+            "mx-auto flex h-12 w-12 flex-none items-center justify-center rounded-full border-none bg-accent-soft text-3xl leading-none text-accent shadow-card transition active:scale-95 sm:hidden " +
             (items.length ? "mt-1" : "my-auto")
           }
         >
