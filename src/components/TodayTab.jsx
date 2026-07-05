@@ -139,6 +139,50 @@ function AmountModal({ ctx, onCommit, onClose }) {
   );
 }
 
+// Mobile bucket "+" flow: pick a food (favorites first) then set the amount.
+function FoodSelector({ foods, onPick, onClose }) {
+  const { t } = useI18n();
+  const [q, setQ] = useState("");
+  const ql = q.toLowerCase();
+  const byName = (a, b) => a.name.localeCompare(b.name);
+  const favs = foods.filter((f) => f.fav).sort(byName);
+  const rest = foods.filter((f) => !f.fav).sort(byName);
+  const list = [...favs, ...rest].filter((f) => f.name.toLowerCase().includes(ql));
+
+  return (
+    <Overlay onClose={onClose}>
+      <div className="mb-3 text-center text-[17px] font-extrabold">{t("addFood")}</div>
+      <input
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder={t("searchFoods")}
+        autoComplete="off"
+        className="mb-3 w-full rounded-[13px] border border-line bg-white px-4 py-2.5 text-[15px] text-ink focus:border-accent focus:shadow-[0_0_0_3px_var(--color-accent-soft)] focus:outline-none"
+      />
+      <div className="flex max-h-[46vh] flex-col gap-1.5 overflow-y-auto">
+        {list.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => onPick(f)}
+            className="flex w-full items-center justify-between gap-2 rounded-[11px] border border-line bg-white px-3 py-2.5 text-left hover:border-accent hover:bg-accent-soft"
+          >
+            <span className="flex min-w-0 items-center gap-1.5 text-[15px] font-bold">
+              {f.fav && <span className="flex-none text-[#ef4444]">♥</span>}
+              <span className="truncate">{f.name}</span>
+            </span>
+            <span className="flex-none whitespace-nowrap text-xs font-semibold text-accent">
+              {rateLabel(f)}
+            </span>
+          </button>
+        ))}
+        {!list.length && (
+          <div className="p-6 text-center text-[15px] text-muted">{t("noMatch", { q })}</div>
+        )}
+      </div>
+    </Overlay>
+  );
+}
+
 // ── Food cards (library + favorites) ────────────────────────────────────────
 
 function FoodCard({ f, onAdd, onTrash, onFav, onDragAway }) {
@@ -344,7 +388,7 @@ function LoggedEntry({ e, onEdit, onRemove }) {
   );
 }
 
-function MealCard({ meal, items, total, onDrop, onEditEntry, onRemoveEntry }) {
+function MealCard({ meal, items, total, onDrop, onAdd, onEditEntry, onRemoveEntry }) {
   const { t } = useI18n();
   const [over, setOver] = useState(false);
   return (
@@ -379,21 +423,31 @@ function MealCard({ meal, items, total, onDrop, onEditEntry, onRemoveEntry }) {
         </span>
       </h3>
       <div className="flex flex-1 flex-col gap-2 p-2.5 sm:gap-[9px] sm:p-3.5">
-        {items.length ? (
-          items.map((e) => (
-            <LoggedEntry
-              key={e.id}
-              e={e}
-              onEdit={() => onEditEntry(e)}
-              onRemove={() => onRemoveEntry(e.id)}
-            />
-          ))
-        ) : (
-          <div className="flex min-h-[100px] flex-1 items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-sm text-[#aab2bb] sm:min-h-[120px] sm:text-[15px] lg:min-h-[64px]">
-            <span className="sm:hidden">{t("nothingYet")}</span>
-            <span className="hidden sm:inline">{t("dropFoodHere")}</span>
+        {items.map((e) => (
+          <LoggedEntry
+            key={e.id}
+            e={e}
+            onEdit={() => onEditEntry(e)}
+            onRemove={() => onRemoveEntry(e.id)}
+          />
+        ))}
+        {/* Desktop: drag target hint when empty. */}
+        {!items.length && (
+          <div className="hidden min-h-[120px] flex-1 items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-[15px] text-[#aab2bb] sm:flex lg:min-h-[64px]">
+            {t("dropFoodHere")}
           </div>
         )}
+        {/* Mobile: green + opens the food selector for this meal. */}
+        <button
+          onClick={onAdd}
+          title={t("addFood")}
+          className={
+            "mx-auto flex h-12 w-12 flex-none items-center justify-center rounded-full border-none bg-accent text-3xl leading-none text-white shadow-card transition active:scale-95 sm:hidden " +
+            (items.length ? "mt-1" : "my-auto")
+          }
+        >
+          ＋
+        </button>
       </div>
     </div>
   );
@@ -549,6 +603,7 @@ export default function TodayTab({ data, update }) {
   const [search, setSearch] = useState("");
   const [pickerFood, setPickerFood] = useState(null);
   const [amtCtx, setAmtCtx] = useState(null);
+  const [selectorMeal, setSelectorMeal] = useState(null);
   const [favOver, setFavOver] = useState(false);
 
   const cur = dayFromKey(curKey);
@@ -682,6 +737,7 @@ export default function TodayTab({ data, update }) {
       items={entriesFor(logs, k).filter((e) => e.meal === m.key)}
       total={mealTotal(logs, k, m.key)}
       onDrop={(payload) => handleDrop(payload, m.key)}
+      onAdd={() => setSelectorMeal(m.key)}
       onEditEntry={(e) => setAmtCtx({ kind: "edit", entry: e })}
       onRemoveEntry={removeEntry}
     />
@@ -810,6 +866,16 @@ export default function TodayTab({ data, update }) {
             const f = pickerFood;
             setPickerFood(null);
             setAmtCtx({ kind: "log", food: f, meal });
+          }}
+        />
+      )}
+      {selectorMeal && (
+        <FoodSelector
+          foods={foods}
+          onClose={() => setSelectorMeal(null)}
+          onPick={(f) => {
+            setAmtCtx({ kind: "log", food: f, meal: selectorMeal });
+            setSelectorMeal(null);
           }}
         />
       )}
