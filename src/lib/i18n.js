@@ -22,6 +22,7 @@ const T = {
     syncing: "Syncing…",
     signedIn: "Signed in",
     signOut: "Sign out",
+    signInToSave: "Sign in to save your data",
 
     "meal.breakfast": "Breakfast",
     "meal.lunch": "Lunch",
@@ -104,6 +105,7 @@ const T = {
     syncing: "Sinhronizacija…",
     signedIn: "Prijavljen",
     signOut: "Odjava",
+    signInToSave: "Prijavi se da sačuvaš podatke",
 
     "meal.breakfast": "Doručak",
     "meal.lunch": "Ručak",
