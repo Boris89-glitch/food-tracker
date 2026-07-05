@@ -79,12 +79,13 @@ export default function HistoryTab({ data, visible }) {
     .sort()
     .reverse();
 
-  const card = "mb-[22px] rounded-[18px] border border-line bg-white p-6 shadow-card";
+  const card =
+    "rounded-2xl border border-line bg-white p-4 shadow-card sm:rounded-[18px] sm:p-6";
   const sectit =
-    "mb-4 mt-0 text-[15px] font-extrabold uppercase tracking-[0.6px] text-muted";
+    "mb-3 mt-0 text-[13px] font-extrabold uppercase tracking-[0.6px] text-muted sm:mb-4 sm:text-[15px]";
 
   return (
-    <section className="animate-fade grid grid-cols-1 gap-[22px] min-[980px]:grid-cols-2">
+    <section className="animate-fade grid grid-cols-1 gap-3.5 sm:gap-[22px] min-[980px]:grid-cols-2">
       <div className={card}>
         <p className={sectit}>Daily calories vs goal</p>
         <div className="mb-4 flex gap-2">
@@ -93,7 +94,7 @@ export default function HistoryTab({ data, visible }) {
               key={r}
               onClick={() => setRange(r)}
               className={
-                "flex-1 cursor-pointer rounded-[11px] border p-[11px] text-[15px] font-bold " +
+                "flex-1 cursor-pointer rounded-[11px] border p-2 text-sm font-bold sm:p-[11px] sm:text-[15px] " +
                 (range === r
                   ? "border-accent bg-accent-soft text-accent"
                   : "border-line bg-white text-muted")
@@ -103,7 +104,7 @@ export default function HistoryTab({ data, visible }) {
             </button>
           ))}
         </div>
-        <div className="relative h-[320px]">
+        <div className="relative h-[230px] sm:h-[320px]">
           <canvas ref={canvasRef} />
         </div>
       </div>
@@ -116,7 +117,7 @@ export default function HistoryTab({ data, visible }) {
             return (
               <div
                 key={k}
-                className="flex justify-between border-b border-line2 px-1 py-3.5 text-base last:border-b-0"
+                className="flex justify-between border-b border-line2 px-1 py-2.5 text-sm last:border-b-0 sm:py-3.5 sm:text-base"
               >
                 <span className="font-bold">
                   {fmtShort(dayFromKey(k))}

@@ -68,7 +68,13 @@ export default function App() {
         ref,
         (snap) => {
           if (!snap.exists()) {
-            // New account: seed the cloud doc from whatever is on this device.
+            // A "missing" doc served from the local cache is NOT authoritative:
+            // the server copy may well exist (e.g. data written from another
+            // device). Wait for the server snapshot before deciding this is a
+            // new account — otherwise we'd overwrite real cloud data with this
+            // device's local seed.
+            if (snap.metadata.fromCache) return;
+            // Genuinely new account: seed the cloud doc from this device.
             setDoc(ref, { ...dataRef.current, updatedAt: serverTimestamp() }).catch((e) =>
               console.error(e)
             );
@@ -115,7 +121,7 @@ export default function App() {
   }
 
   return (
-    <div className="mx-auto max-w-[1680px] px-[34px] pb-[60px] pt-[max(26px,env(safe-area-inset-top))]">
+    <div className="mx-auto max-w-[1680px] px-4 pb-10 pt-[max(14px,env(safe-area-inset-top))] sm:px-[34px] sm:pb-[60px] sm:pt-[max(26px,env(safe-area-inset-top))]">
       <TopBar
         tab={tab}
         onTab={setTab}
