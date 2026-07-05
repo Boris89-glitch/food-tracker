@@ -8,8 +8,10 @@ import {
   fmtShort,
   startOfToday,
 } from "../lib/model.js";
+import { useI18n } from "../lib/i18n.js";
 
 export default function HistoryTab({ data, visible }) {
+  const { t } = useI18n();
   const { logs, goal } = data;
   const [range, setRange] = useState(7);
   const canvasRef = useRef(null);
@@ -87,7 +89,7 @@ export default function HistoryTab({ data, visible }) {
   return (
     <section className="animate-fade grid grid-cols-1 gap-3.5 sm:gap-[22px] min-[980px]:grid-cols-2">
       <div className={card}>
-        <p className={sectit}>Daily calories vs goal</p>
+        <p className={sectit}>{t("dailyVsGoal")}</p>
         <div className="mb-4 flex gap-2">
           {[7, 14, 30].map((r) => (
             <button
@@ -100,7 +102,7 @@ export default function HistoryTab({ data, visible }) {
                   : "border-line bg-white text-muted")
               }
             >
-              {r} days
+              {t("daysRange", { r })}
             </button>
           ))}
         </div>
@@ -109,7 +111,7 @@ export default function HistoryTab({ data, visible }) {
         </div>
       </div>
       <div className={card}>
-        <p className={sectit}>Day by day</p>
+        <p className={sectit}>{t("dayByDay")}</p>
         {historyKeys.length ? (
           historyKeys.map((k) => {
             const t = dayTotal(logs, k);
@@ -121,7 +123,9 @@ export default function HistoryTab({ data, visible }) {
               >
                 <span className="font-bold">
                   {fmtShort(dayFromKey(k))}
-                  {k === todayKey && <span className="font-normal text-muted"> · today</span>}
+                  {k === todayKey && (
+                    <span className="font-normal text-muted"> · {t("todaySuffix")}</span>
+                  )}
                 </span>
                 <span className="text-muted">
                   <b style={{ color: over ? "var(--color-danger)" : "var(--color-ink)" }}>
@@ -133,7 +137,7 @@ export default function HistoryTab({ data, visible }) {
             );
           })
         ) : (
-          <div className="mt-2.5 text-center text-sm text-muted">No history yet.</div>
+          <div className="mt-2.5 text-center text-sm text-muted">{t("noHistory")}</div>
         )}
       </div>
     </section>

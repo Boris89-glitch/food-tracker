@@ -2,6 +2,8 @@
 // per item (mode "item"). A log entry carries an amount + a snapshot of that
 // rate, so its calories can be recomputed and old foods can be deleted safely.
 
+import { t, getLocale } from "./i18n.js";
+
 export const uid = () =>
   Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
@@ -48,18 +50,21 @@ export const calcCal = (mode, rate, amt) =>
 
 export const rateLabel = (f) =>
   f.mode === "item"
-    ? `${(+f.kcal).toLocaleString()} kcal / item`
+    ? `${(+f.kcal).toLocaleString()} kcal / ${t("unitItem")}`
     : `${(+f.kcal).toLocaleString()} kcal / 100 ${f.unit}`;
 
 export const amtLabel = (e) =>
   e.mode === "item" ? `× ${e.amount}` : `${e.amount} ${e.unit}`;
 
 export const MEALS = [
-  { key: "breakfast", label: "Breakfast", ic: "🌅" },
-  { key: "lunch", label: "Lunch", ic: "☀️" },
-  { key: "snacks", label: "Snacks", ic: "🍎" },
-  { key: "dinner", label: "Dinner", ic: "🌙" },
+  { key: "breakfast", ic: "🌅" },
+  { key: "lunch", ic: "☀️" },
+  { key: "snacks", ic: "🍎" },
+  { key: "dinner", ic: "🌙" },
 ];
+
+// Translated label for a meal key (or a MEALS entry).
+export const mealLabel = (m) => t(`meal.${typeof m === "string" ? m : m.key}`);
 
 const pad = (n) => String(n).padStart(2, "0");
 export const dateKey = (d) =>
@@ -74,9 +79,9 @@ export const startOfToday = () => {
   return t;
 };
 export const fmtLong = (d) =>
-  d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+  d.toLocaleDateString(getLocale(), { weekday: "long", month: "long", day: "numeric" });
 export const fmtShort = (d) =>
-  d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  d.toLocaleDateString(getLocale(), { month: "short", day: "numeric" });
 
 export const entriesFor = (logs, k) => logs[k] || [];
 export const dayTotal = (logs, k) =>

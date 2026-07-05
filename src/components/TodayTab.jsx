@@ -8,11 +8,13 @@ import {
   dayTotal,
   entriesFor,
   fmtLong,
+  mealLabel,
   mealTotal,
   rateLabel,
   startOfToday,
   uid,
 } from "../lib/model.js";
+import { useI18n } from "../lib/i18n.js";
 
 // True once the current drag lands on a valid target (meal bucket or the
 // Favorites bucket). dragend checks it: still false means the card was
@@ -38,10 +40,11 @@ function Overlay({ onClose, children }) {
 }
 
 function MealPicker({ food, onPick, onClose }) {
+  const { t } = useI18n();
   return (
     <Overlay onClose={onClose}>
       <div className="mb-[15px] text-center text-[17px] font-extrabold">
-        Add “{food.name}” to…
+        {t("addTo", { name: food.name })}
       </div>
       {MEALS.map((m) => (
         <button
@@ -50,7 +53,7 @@ function MealPicker({ food, onPick, onClose }) {
           className="mb-[9px] flex w-full cursor-pointer items-center gap-[13px] rounded-[13px] border border-line bg-white p-[15px] text-[17px] font-bold hover:border-accent hover:bg-accent-soft"
         >
           <span className="text-[22px]">{m.ic}</span>
-          {m.label}
+          {mealLabel(m)}
         </button>
       ))}
     </Overlay>
@@ -59,6 +62,7 @@ function MealPicker({ food, onPick, onClose }) {
 
 // Amount modal: choose grams/ml or item count when logging or editing.
 function AmountModal({ ctx, onCommit, onClose }) {
+  const { t } = useI18n();
   const isItem = (ctx.kind === "log" ? ctx.food.mode : ctx.entry.mode) === "item";
   const unitLabel = isItem ? "×" : ctx.kind === "log" ? ctx.food.unit : ctx.entry.unit;
   const [val, setVal] = useState(ctx.kind === "log" ? (isItem ? "1" : "100") : String(ctx.entry.amount));
@@ -85,10 +89,9 @@ function AmountModal({ ctx, onCommit, onClose }) {
 
   const title =
     ctx.kind === "log"
-      ? (isItem ? "How many · " : "How much · ") + ctx.food.name
-      : "Edit · " + ctx.entry.name;
-  const mealLabel =
-    ctx.kind === "log" ? (MEALS.find((m) => m.key === ctx.meal) || {}).label || "" : null;
+      ? t(isItem ? "howMany" : "howMuch", { name: ctx.food.name })
+      : t("editEntry", { name: ctx.entry.name });
+  const meal = ctx.kind === "log" ? mealLabel(ctx.meal) : null;
   const presets = isItem ? [1, 2, 3, 4] : [50, 100, 150, 200];
 
   return (
@@ -130,7 +133,7 @@ function AmountModal({ ctx, onCommit, onClose }) {
         onClick={commit}
         className="w-full cursor-pointer rounded-[13px] border-none bg-accent p-[15px] text-[17px] font-bold text-white"
       >
-        {ctx.kind === "log" ? "Add to " + mealLabel : "Save"}
+        {ctx.kind === "log" ? t("addToMeal", { meal }) : t("save")}
       </button>
     </Overlay>
   );
@@ -139,6 +142,7 @@ function AmountModal({ ctx, onCommit, onClose }) {
 // ── Food cards (library + favorites) ────────────────────────────────────────
 
 function FoodCard({ f, onAdd, onTrash, onFav, onDragAway }) {
+  const { t } = useI18n();
   const [dragging, setDragging] = useState(false);
   return (
     <div
@@ -159,7 +163,7 @@ function FoodCard({ f, onAdd, onTrash, onFav, onDragAway }) {
     >
       <button
         onClick={onFav}
-        title={f.fav ? "Remove favorite" : "Favorite"}
+        title={f.fav ? t("removeFavorite") : t("favorite")}
         className={
           "absolute left-1 top-1.5 flex h-6 w-6 cursor-pointer items-center justify-center border-none bg-transparent p-0 text-base leading-none transition duration-[120ms] hover:scale-[1.12] hover:text-[#ef4444] sm:left-[9px] sm:top-2.5 sm:h-7 sm:w-7 sm:text-xl " +
           (f.fav ? "text-[#ef4444]" : "text-[#c9d0d8]")
@@ -169,7 +173,7 @@ function FoodCard({ f, onAdd, onTrash, onFav, onDragAway }) {
       </button>
       <button
         onClick={onAdd}
-        title="Add to a meal"
+        title={t("addToAMeal")}
         className="absolute right-1.5 top-1.5 flex h-6 w-6 cursor-pointer items-center justify-center rounded-lg border-none bg-accent-soft text-base font-bold leading-none text-accent hover:bg-accent hover:text-white sm:right-[11px] sm:top-[11px] sm:h-[30px] sm:w-[30px] sm:rounded-[9px] sm:text-xl"
       >
         +
@@ -192,7 +196,7 @@ function FoodCard({ f, onAdd, onTrash, onFav, onDragAway }) {
       </div>
       <button
         onClick={onTrash}
-        title="Delete from library"
+        title={t("deleteFromLibrary")}
         className="absolute bottom-2 right-2 cursor-pointer border-none bg-transparent p-0.5 text-[13px] text-[#c4ccd4] opacity-50 transition duration-[130ms] hover:text-danger sm:bottom-3 sm:right-[13px] sm:text-[15px] sm:opacity-0 sm:group-hover:opacity-100"
       >
         🗑
@@ -202,6 +206,7 @@ function FoodCard({ f, onAdd, onTrash, onFav, onDragAway }) {
 }
 
 function AddFoodCard({ onAdd }) {
+  const { t } = useI18n();
   const [name, setName] = useState("");
   const [cal, setCal] = useState("");
   const [mode, setMode] = useState("per100-g");
@@ -210,7 +215,11 @@ function AddFoodCard({ onAdd }) {
   const nameRef = useRef(null);
 
   const placeholder =
-    mode === "item" ? "kcal per item" : mode === "per100-ml" ? "kcal per 100 ml" : "kcal per 100 g";
+    mode === "item"
+      ? t("kcalPerItem")
+      : mode === "per100-ml"
+        ? t("kcalPer100ml")
+        : t("kcalPer100g");
 
   const submit = () => {
     const n = name.trim();
@@ -240,7 +249,7 @@ function AddFoodCard({ onAdd }) {
         onKeyDown={(e) => {
           if (e.key === "Enter") calRef.current?.focus();
         }}
-        placeholder="New food name"
+        placeholder={t("newFoodName")}
         autoComplete="off"
         className={inputCls(flash === "name")}
       />
@@ -248,7 +257,7 @@ function AddFoodCard({ onAdd }) {
         {[
           ["per100-g", "/100g"],
           ["per100-ml", "/100ml"],
-          ["item", "item"],
+          ["item", t("chipItem")],
         ].map(([m, label]) => (
           <button
             key={m}
@@ -281,7 +290,7 @@ function AddFoodCard({ onAdd }) {
           onClick={submit}
           className="cursor-pointer rounded-[11px] border-none bg-accent px-3.5 py-2 text-sm font-bold text-white sm:px-4 sm:py-[11px] sm:text-[15px]"
         >
-          Add
+          {t("add")}
         </button>
       </div>
     </div>
@@ -291,11 +300,12 @@ function AddFoodCard({ onAdd }) {
 // ── Meal bucket ─────────────────────────────────────────────────────────────
 
 function LoggedEntry({ e, onEdit, onRemove }) {
+  const { t } = useI18n();
   const [dragging, setDragging] = useState(false);
   return (
     <div
       draggable
-      title="Tap to edit amount"
+      title={t("tapToEdit")}
       onDragStart={(ev) => {
         ev.dataTransfer.setData("text/plain", "entry:" + e.id);
         dragValidDrop = false;
@@ -320,7 +330,7 @@ function LoggedEntry({ e, onEdit, onRemove }) {
           {(+e.cal).toLocaleString()} kcal
         </span>
         <button
-          title="Remove"
+          title={t("remove")}
           onClick={(ev) => {
             ev.stopPropagation();
             onRemove();
@@ -335,6 +345,7 @@ function LoggedEntry({ e, onEdit, onRemove }) {
 }
 
 function MealCard({ meal, items, total, onDrop, onEditEntry, onRemoveEntry }) {
+  const { t } = useI18n();
   const [over, setOver] = useState(false);
   return (
     <div
@@ -361,7 +372,7 @@ function MealCard({ meal, items, total, onDrop, onEditEntry, onRemoveEntry }) {
       <h3 className="m-0 flex items-center justify-between border-b-2 border-line2 px-3.5 py-3 text-base font-extrabold sm:px-5 sm:py-[18px] sm:text-[19px]">
         <span className="flex items-center gap-2 sm:gap-[11px]">
           <span className="text-xl sm:text-2xl">{meal.ic}</span>
-          {meal.label}
+          {mealLabel(meal)}
         </span>
         <span className="text-[13px] font-extrabold tabular-nums text-accent sm:text-[15px]">
           {total.toLocaleString()} kcal
@@ -379,8 +390,8 @@ function MealCard({ meal, items, total, onDrop, onEditEntry, onRemoveEntry }) {
           ))
         ) : (
           <div className="flex min-h-[100px] flex-1 items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-sm text-[#aab2bb] sm:min-h-[120px] sm:text-[15px] lg:min-h-[64px]">
-            <span className="sm:hidden">Nothing yet — tap ＋ on a food below</span>
-            <span className="hidden sm:inline">Drop food here</span>
+            <span className="sm:hidden">{t("nothingYet")}</span>
+            <span className="hidden sm:inline">{t("dropFoodHere")}</span>
           </div>
         )}
       </div>
@@ -420,7 +431,7 @@ function MobileMealPager({ totals, renderCard }) {
           >
             <span className="text-base">{m.ic}</span>
             <span className={"text-[10px] font-bold " + (i === active ? "text-ink" : "text-muted")}>
-              {m.label}
+              {mealLabel(m)}
             </span>
             <span
               className={
@@ -462,6 +473,7 @@ function MobileMealPager({ totals, renderCard }) {
 // ── Hero (progress ring + stats) ────────────────────────────────────────────
 
 function Hero({ total, goal, onEditGoal }) {
+  const { t } = useI18n();
   const rem = goal - total;
   const pct = goal > 0 ? total / goal : 0;
   const C = 2 * Math.PI * 72;
@@ -495,30 +507,30 @@ function Hero({ total, goal, onEditGoal }) {
             {total.toLocaleString()}
           </span>
           <span className="mt-0.5 text-[11px] font-bold text-muted sm:mt-1 sm:text-sm">
-            of {goal.toLocaleString()}
+            {t("ofGoal", { goal: goal.toLocaleString() })}
           </span>
         </div>
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:min-w-[300px] sm:flex-row sm:flex-wrap sm:gap-10">
         <div className={stat}>
-          <span className={label}>Consumed</span>
+          <span className={label}>{t("consumed")}</span>
           <span className={value}>{total.toLocaleString()}</span>
         </div>
         <div className={stat}>
-          <span className={label}>{rem >= 0 ? "Remaining" : "Over by"}</span>
+          <span className={label}>{rem >= 0 ? t("remaining") : t("overBy")}</span>
           <span className={value + " " + (rem >= 0 ? "text-accent" : "text-danger")}>
             {Math.abs(rem).toLocaleString()}
           </span>
         </div>
         <div className={stat}>
-          <span className={label}>Daily goal</span>
+          <span className={label}>{t("dailyGoal")}</span>
           <span className="flex items-center gap-2">
             <span className={value}>{goal.toLocaleString()}</span>
             <button
               onClick={onEditGoal}
               className="cursor-pointer rounded-[9px] border-none bg-accent-soft px-2 py-1 text-[11px] font-bold text-accent sm:px-3 sm:py-[5px] sm:text-[13px]"
             >
-              edit
+              {t("editShort")}
             </button>
           </span>
         </div>
@@ -530,6 +542,7 @@ function Hero({ total, goal, onEditGoal }) {
 // ── Today tab ───────────────────────────────────────────────────────────────
 
 export default function TodayTab({ data, update }) {
+  const { t } = useI18n();
   const { foods, logs, goal } = data;
   const today = startOfToday();
   const [curKey, setCurKey] = useState(dateKey(today));
@@ -616,7 +629,7 @@ export default function TodayTab({ data, update }) {
   const deleteFood = (id) => {
     const f = foods.find((x) => x.id === id);
     if (!f) return;
-    if (confirm(`Remove “${f.name}” from your library? (Past logs stay.)`)) {
+    if (confirm(t("confirmDelete", { name: f.name }))) {
       update((d) => ({ ...d, foods: d.foods.filter((x) => x.id !== id) }));
     }
   };
@@ -643,7 +656,7 @@ export default function TodayTab({ data, update }) {
   };
 
   const editGoal = () => {
-    const v = prompt("Daily calorie goal:", goal);
+    const v = prompt(t("goalPrompt"), goal);
     if (v === null) return;
     const n = Math.round(+v);
     if (n > 0) update((d) => ({ ...d, goal: n }));
@@ -685,7 +698,7 @@ export default function TodayTab({ data, update }) {
           ‹
         </button>
         <div className="min-w-0 flex-1 text-center text-lg font-extrabold sm:min-w-[340px] sm:flex-none sm:text-[22px]">
-          {curKey === todayKey ? "Today" : fmtLong(cur)}
+          {curKey === todayKey ? t("today") : fmtLong(cur)}
           <small className="mt-0.5 block text-xs font-semibold text-muted sm:text-sm">
             {curKey === todayKey ? fmtLong(cur) : " "}
           </small>
@@ -735,7 +748,7 @@ export default function TodayTab({ data, update }) {
         >
           <h3 className="m-0 flex items-center justify-between border-b-2 border-[#f6e0e2] px-3.5 py-3 text-base font-extrabold sm:px-5 sm:py-[18px] sm:text-[19px]">
             <span className="flex items-center gap-2 sm:gap-[11px]">
-              <span className="text-xl sm:text-2xl">❤️</span>Favorites
+              <span className="text-xl sm:text-2xl">❤️</span>{t("favorites")}
             </span>
             <span className="text-[13px] font-extrabold tabular-nums text-[#ef4444] sm:text-[15px]">
               {favs.length || ""}
@@ -750,10 +763,8 @@ export default function TodayTab({ data, update }) {
               </div>
             ) : (
               <div className="flex min-h-[90px] items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-sm text-[#aab2bb] sm:min-h-[120px] sm:text-[15px]">
-                <span className="sm:hidden">Tap a food's ♡ to keep it here for quick logging</span>
-                <span className="hidden sm:inline">
-                  Drag a food here — or tap its ♡ — to keep it here for quick logging
-                </span>
+                <span className="sm:hidden">{t("favEmptyMobile")}</span>
+                <span className="hidden sm:inline">{t("favEmptyDesktop")}</span>
               </div>
             )}
           </div>
@@ -763,18 +774,18 @@ export default function TodayTab({ data, update }) {
       {/* Library */}
       <div className="mx-1 mb-3 mt-1.5 flex flex-wrap items-center justify-between gap-2.5 sm:mb-4">
         <span className="text-sm font-extrabold uppercase tracking-[0.6px] text-muted sm:text-[17px]">
-          Food library
+          {t("foodLibrary")}
         </span>
         <span className="text-xs text-muted sm:text-sm">
-          <span className="sm:hidden">tap ＋ on a card to log it</span>
-          <span className="hidden sm:inline">drag a card up into a meal — or tap ＋ to choose</span>
+          <span className="sm:hidden">{t("libHintMobile")}</span>
+          <span className="hidden sm:inline">{t("libHintDesktop")}</span>
         </span>
       </div>
       <div className="mb-3 max-w-[420px] sm:mb-[18px]">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search foods…"
+          placeholder={t("searchFoods")}
           autoComplete="off"
           className="w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-[15px] text-ink focus:border-accent focus:shadow-[0_0_0_3px_var(--color-accent-soft)] focus:outline-none sm:rounded-[13px] sm:px-4 sm:py-3.5 sm:text-base"
         />
@@ -785,7 +796,7 @@ export default function TodayTab({ data, update }) {
         ))}
         {!libList.length && q && (
           <div className="col-span-full p-6 text-center text-[15px] text-muted">
-            No match for “{search}”.
+            {t("noMatch", { q: search })}
           </div>
         )}
         <AddFoodCard onAdd={addFood} />

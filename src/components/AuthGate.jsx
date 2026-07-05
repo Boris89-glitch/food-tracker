@@ -6,6 +6,7 @@ import {
   signInWithRedirect,
 } from "firebase/auth";
 import { CONFIGURED, auth } from "../firebase.js";
+import { useI18n } from "../lib/i18n.js";
 
 const GoogleMark = () => (
   <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-none">
@@ -17,14 +18,16 @@ const GoogleMark = () => (
 );
 
 export default function AuthGate({ loading, onLocal }) {
+  const { t } = useI18n();
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!CONFIGURED) return;
     getRedirectResult(auth).catch((e) => {
-      if (e) setErr(e.message || "Sign-in failed.");
+      if (e) setErr(e.message || t("signInFailed"));
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const signIn = () => {
@@ -43,7 +46,7 @@ export default function AuthGate({ loading, onLocal }) {
       } else if (e && e.code === "auth/popup-closed-by-user") {
         // user closed it — no error message needed
       } else {
-        setErr((e && e.message) || "Sign-in failed. Please try again.");
+        setErr((e && e.message) || t("signInFailedRetry"));
       }
     });
   };
@@ -56,9 +59,7 @@ export default function AuthGate({ loading, onLocal }) {
           Food Tracker
         </h2>
         <p className="mb-[22px] text-base text-muted">
-          {CONFIGURED
-            ? "Sign in to sync your food log across every device."
-            : "Running in local-only mode. Add your Firebase config in src/firebase.js to enable Google sign-in and cross-device sync."}
+          {CONFIGURED ? t("authSyncPrompt") : t("authLocalPrompt")}
         </p>
         {loading ? (
           <div className="mx-auto mt-1.5 h-[34px] w-[34px] animate-spin rounded-full border-[3px] border-line border-t-accent" />
@@ -69,14 +70,14 @@ export default function AuthGate({ loading, onLocal }) {
             className="inline-flex w-full cursor-pointer items-center justify-center gap-3 rounded-[13px] border border-line bg-white px-[18px] py-3.5 text-base font-bold text-ink shadow-card hover:border-[#c7ced6] hover:bg-[#fafbfc] disabled:cursor-default disabled:opacity-60"
           >
             <GoogleMark />
-            Continue with Google
+            {t("continueGoogle")}
           </button>
         ) : (
           <button
             onClick={onLocal}
             className="inline-flex w-full cursor-pointer items-center justify-center gap-3 rounded-[13px] border border-line bg-white px-[18px] py-3.5 text-base font-bold text-ink shadow-card hover:border-[#c7ced6] hover:bg-[#fafbfc]"
           >
-            Continue offline
+            {t("continueOffline")}
           </button>
         )}
         <p className="mt-3.5 min-h-[18px] text-sm font-semibold text-danger">{err}</p>
