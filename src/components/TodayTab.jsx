@@ -307,7 +307,7 @@ function LoggedEntry({ e, onEdit, onRemove }) {
       }}
       onClick={onEdit}
       className={
-        "flex cursor-pointer items-center justify-between rounded-[11px] border border-line2 bg-[#f8fafb] px-2.5 py-2 active:cursor-grabbing sm:rounded-[13px] sm:px-[15px] sm:py-[13px] " +
+        "flex cursor-pointer items-center justify-between rounded-[11px] border border-line2 bg-[#f8fafb] px-2.5 py-1.5 active:cursor-grabbing sm:rounded-[13px] sm:px-[15px] sm:py-2 " +
         (dragging ? "opacity-45" : "")
       }
     >
@@ -352,7 +352,7 @@ function MealCard({ meal, items, total, onDrop, onEditEntry, onRemoveEntry }) {
         onDrop(e.dataTransfer.getData("text/plain"));
       }}
       className={
-        "flex min-h-[240px] flex-col rounded-2xl border-2 bg-white shadow-card transition sm:min-h-[360px] sm:rounded-[18px] " +
+        "flex min-h-[240px] flex-col rounded-2xl border-2 bg-white shadow-card transition sm:min-h-[360px] sm:rounded-[18px] lg:min-h-[140px] " +
         (over
           ? "-translate-y-[3px] border-accent shadow-[0_0_0_4px_var(--color-accent-soft)]"
           : "border-line")
@@ -378,7 +378,7 @@ function MealCard({ meal, items, total, onDrop, onEditEntry, onRemoveEntry }) {
             />
           ))
         ) : (
-          <div className="flex min-h-[100px] flex-1 items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-sm text-[#aab2bb] sm:min-h-[120px] sm:text-[15px]">
+          <div className="flex min-h-[100px] flex-1 items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-sm text-[#aab2bb] sm:min-h-[120px] sm:text-[15px] lg:min-h-[64px]">
             <span className="sm:hidden">Nothing yet — tap ＋ on a food below</span>
             <span className="hidden sm:inline">Drop food here</span>
           </div>
@@ -702,8 +702,8 @@ export default function TodayTab({ data, update }) {
       <Hero total={total} goal={goal} onEditGoal={editGoal} />
 
       {/* Meals (left) + Favorites (right on desktop) */}
-      <div className="mb-5 flex flex-col gap-5 sm:mb-[30px] sm:gap-[18px] lg:flex-row lg:items-start">
-        {/* Meal buckets — one at a time via the chip pager on every screen size */}
+      <div className="mb-5 flex flex-col gap-5 sm:mb-[30px] sm:gap-[18px] lg:grid lg:grid-cols-3 lg:items-start">
+        {/* Meal buckets — chip pager on every screen size, in the compact left column on desktop */}
         <div className="min-w-0 flex-1">
           <MobileMealPager
             totals={MEALS.map((m) => mealTotal(logs, k, m.key))}
@@ -727,7 +727,7 @@ export default function TodayTab({ data, update }) {
             dropOnFavs(e.dataTransfer.getData("text/plain"));
           }}
           className={
-            "flex flex-col rounded-2xl border-2 bg-white shadow-card transition sm:rounded-[18px] lg:w-[360px] lg:flex-none " +
+            "flex flex-col rounded-2xl border-2 bg-white shadow-card transition sm:rounded-[18px] lg:col-span-2 " +
             (favOver
               ? "-translate-y-[3px] border-[#ef4444] shadow-[0_0_0_4px_#fde8ea]"
               : "border-[#f3d0d4]")
@@ -743,7 +743,7 @@ export default function TodayTab({ data, update }) {
           </h3>
           <div className="p-2.5 sm:p-3.5">
             {favs.length ? (
-              <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:gap-3.5 lg:grid-cols-1">
+              <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:gap-3.5">
                 {favs.map((f) => (
                   <FoodCard key={f.id} {...cardProps(f)} onDragAway={() => toggleFav(f.id)} />
                 ))}
