@@ -95,6 +95,8 @@ const T = {
     continueOffline: "Continue offline",
     signInFailed: "Sign-in failed.",
     signInFailedRetry: "Sign-in failed. Please try again.",
+
+    footerCredit: "Designed & built by",
   },
   sr: {
     "tab.today": "Danas",
@@ -178,6 +180,8 @@ const T = {
     continueOffline: "Nastavi oflajn",
     signInFailed: "Prijava nije uspela.",
     signInFailedRetry: "Prijava nije uspela. Pokušaj ponovo.",
+
+    footerCredit: "Dizajn i izrada:",
   },
 };
 

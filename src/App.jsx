@@ -3,6 +3,7 @@ import { onAuthStateChanged, signOut as fbSignOut } from "firebase/auth";
 import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
 import { CONFIGURED, auth, db, completeGoogleRedirect, signInWithGoogle } from "./firebase.js";
 import { loadInitialData, writeLS } from "./lib/model.js";
+import { useI18n } from "./lib/i18n.js";
 import Splash from "./components/Splash.jsx";
 import TopBar from "./components/TopBar.jsx";
 import TodayTab from "./components/TodayTab.jsx";
@@ -18,6 +19,7 @@ export default function App() {
   const [synced, setSynced] = useState(true);
   const [tab, setTab] = useState("today");
   const [signInErr, setSignInErr] = useState("");
+  const { t } = useI18n();
 
   const userRef = useRef(null);
   const saveTimer = useRef(null);
@@ -157,6 +159,17 @@ export default function App() {
       <div className={tab === "history" ? "" : "hidden"}>
         <HistoryTab data={data} visible={tab === "history"} />
       </div>
+      <footer className="mt-10 border-t border-line pt-4 text-center text-sm text-muted sm:mt-14">
+        {t("footerCredit")}{" "}
+        <a
+          href="https://www.upwork.com/freelancers/~01b9f151ec60832f96"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-accent hover:underline"
+        >
+          Boris Colic
+        </a>
+      </footer>
     </div>
   );
 }
