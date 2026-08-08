@@ -41,8 +41,8 @@ export default function TopBar({
   const nextLang = LANGS[(LANGS.findIndex((l) => l.code === lang) + 1) % LANGS.length];
   return (
     <div className="mb-4 flex flex-wrap items-center gap-3 sm:mb-[22px] sm:gap-6">
-      <h1 className="flex items-center gap-2 whitespace-nowrap text-xl font-extrabold tracking-[-0.5px] sm:gap-3 sm:text-3xl">
-        🍽️ Food Tracker
+      <h1 className="flex items-center gap-2 whitespace-nowrap font-logo text-[27px] font-bold sm:gap-3 sm:text-[38px]">
+        <span className="text-xl sm:text-3xl">🍽️</span> Food Tracker
       </h1>
       <Clock />
       {/* On phones the tab switcher drops to its own full-width row. */}

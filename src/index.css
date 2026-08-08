@@ -17,6 +17,7 @@
 
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
+  --font-logo: "Caveat", cursive;
 
   --animate-fade: fade 0.25s ease;
   @keyframes fade {
