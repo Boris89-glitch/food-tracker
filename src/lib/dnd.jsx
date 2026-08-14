@@ -15,8 +15,8 @@ const DndContext = createContext(null);
 const ACTIVATE_MS = 120; // settle time before a touch becomes a drag
 const MOVE_CANCEL = 12; // px of pre-activation movement that means "scrolling"
 const EDGE = 180; // px band at top/bottom that triggers auto-scroll
-const MAX_SCROLL = 60; // px/frame at the very edge
-const DRAG_PAN = 2.4; // finger-move → page-scroll multiplier (grab & fling)
+const MAX_SCROLL = 90; // px/frame at the very edge
+const DRAG_PAN = 3.6; // finger-move → page-scroll multiplier (grab & fling)
 
 export function DndProvider({ children }) {
   const zonesRef = useRef([]);
