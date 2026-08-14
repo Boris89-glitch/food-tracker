@@ -14,7 +14,7 @@ const DndContext = createContext(null);
 
 const ACTIVATE_MS = 120; // settle time before a touch becomes a drag
 const MOVE_CANCEL = 12; // px of pre-activation movement that means "scrolling"
-const EDGE = 180; // px band at top/bottom that triggers auto-scroll
+const EDGE = 0.42; // fraction of viewport at top/bottom that auto-scrolls
 const MAX_SCROLL = 90; // px/frame at the very edge
 const DRAG_PAN = 3.6; // finger-move → page-scroll multiplier (grab & fling)
 
@@ -51,11 +51,12 @@ export function DndProvider({ children }) {
     // Edge auto-scroll — steeper the closer to the edge, so you can whip the
     // page up to reach the meal buckets while dragging from the library.
     let dy = 0;
-    if (d.y < EDGE) {
-      const k = 1 - d.y / EDGE; // 0 at band edge → 1 at the very top
+    const band = innerHeight * EDGE;
+    if (d.y < band) {
+      const k = 1 - d.y / band; // 0 at band edge → 1 at the very top
       dy = -MAX_SCROLL * k * k; // quadratic ramp: gentle far, fast near the edge
-    } else if (d.y > innerHeight - EDGE) {
-      const k = 1 - (innerHeight - d.y) / EDGE;
+    } else if (d.y > innerHeight - band) {
+      const k = 1 - (innerHeight - d.y) / band;
       dy = MAX_SCROLL * k * k;
     }
     if (dy) scrollBy(0, dy);
