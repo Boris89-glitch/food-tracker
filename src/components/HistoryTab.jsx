@@ -13,32 +13,32 @@ import { useI18n } from "../lib/i18n.js";
 export default function HistoryTab({ data, visible }) {
   const { t } = useI18n();
   const { logs, goal } = data;
-  const [range, setRange] = useState(7);
+  const [range, setRange] = useState(30); // days visible in the chart window
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
+  const scrollRef = useRef(null);
+  const pan = useRef(null);
 
   const today = startOfToday();
   const todayKey = dateKey(today);
 
+  // The chart always holds the FULL history (first logged day → today); `range`
+  // only sets how many days fit the visible window. You grab-drag it left/right
+  // to pan into the past. `totalDays` drives the inner width vs that window.
+  const firstKey = Object.keys(logs)
+    .filter((k) => entriesFor(logs, k).length)
+    .sort()[0];
+  const totalDays = firstKey
+    ? Math.round((today - dayFromKey(firstKey)) / 86400000) + 1
+    : range;
+
   useEffect(() => {
     if (!visible || !canvasRef.current) return;
     const days = [];
-    if (range === "all") {
-      // Every day from the first logged entry through today — side-scroll for
-      // the rest when there are more bars than fit.
-      const keys = Object.keys(logs)
-        .filter((key) => entriesFor(logs, key).length)
-        .sort();
-      const start = keys.length ? dayFromKey(keys[0]) : new Date(today);
-      for (const d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
-        days.push(new Date(d));
-      }
-    } else {
-      for (let i = range - 1; i >= 0; i--) {
-        const d = new Date(today);
-        d.setDate(d.getDate() - i);
-        days.push(d);
-      }
+    const start = new Date(today);
+    start.setDate(start.getDate() - (totalDays - 1));
+    for (const d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
+      days.push(new Date(d));
     }
     const labels = days.map((d) => fmtShort(d));
     const points = days.map((d) => dayTotal(logs, dateKey(d)));
@@ -81,26 +81,37 @@ export default function HistoryTab({ data, visible }) {
         },
       },
     });
+    // Open pinned to the most recent day (far right); pan left for the past.
+    requestAnimationFrame(() => {
+      if (scrollRef.current) scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+    });
     return () => {
       chartRef.current?.destroy();
       chartRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [logs, goal, range, visible]);
+  }, [logs, goal, range, visible, totalDays]);
 
   const historyKeys = Object.keys(logs)
     .filter((k) => entriesFor(logs, k).length)
     .sort()
     .reverse();
 
-  // Bar count for the chart width: fixed ranges use the range itself; "all"
-  // spans the first logged day → today so the chart can side-scroll.
-  const barCount =
-    range === "all"
-      ? historyKeys.length
-        ? Math.round((today - dayFromKey(historyKeys[historyKeys.length - 1])) / 86400000) + 1
-        : 1
-      : range;
+  // Grab-drag the chart horizontally to pan through history (mouse + touch).
+  const onPanStart = (e) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    pan.current = { x: e.clientX, left: el.scrollLeft };
+    el.setPointerCapture?.(e.pointerId);
+  };
+  const onPanMove = (e) => {
+    const el = scrollRef.current;
+    if (!pan.current || !el) return;
+    el.scrollLeft = pan.current.left - (e.clientX - pan.current.x);
+  };
+  const onPanEnd = () => {
+    pan.current = null;
+  };
 
   const card =
     "rounded-2xl border border-line bg-white p-4 shadow-card sm:rounded-[18px] sm:p-6";
@@ -112,7 +123,7 @@ export default function HistoryTab({ data, visible }) {
       <div className={card}>
         <p className={sectit}>{t("dailyVsGoal")}</p>
         <div className="mb-4 flex gap-2">
-          {[7, 14, 30, "all"].map((r) => (
+          {[7, 14, 30].map((r) => (
             <button
               key={r}
               onClick={() => setRange(r)}
@@ -123,12 +134,19 @@ export default function HistoryTab({ data, visible }) {
                   : "border-line bg-white text-muted")
               }
             >
-              {r === "all" ? t("allDays") : t("daysRange", { r })}
+              {t("daysRange", { r })}
             </button>
           ))}
         </div>
-        <div className="relative h-[230px] overflow-x-auto sm:h-[320px]">
-          <div className="h-full" style={range === "all" ? { minWidth: barCount * 42 } : undefined}>
+        <div
+          ref={scrollRef}
+          onPointerDown={onPanStart}
+          onPointerMove={onPanMove}
+          onPointerUp={onPanEnd}
+          onPointerCancel={onPanEnd}
+          className="no-scrollbar relative h-[230px] cursor-grab overflow-x-auto touch-pan-y active:cursor-grabbing sm:h-[320px]"
+        >
+          <div className="h-full" style={{ width: Math.max(100, (totalDays / range) * 100) + "%" }}>
             <canvas ref={canvasRef} />
           </div>
         </div>
