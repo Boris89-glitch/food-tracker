@@ -422,7 +422,7 @@ function MealCard({ meal, items, total, onDrop, onAdd, onEditEntry, onRemoveEntr
         onDrop(e.dataTransfer.getData("text/plain"));
       }}
       className={
-        "flex min-h-[240px] flex-col rounded-2xl border-2 bg-white shadow-card transition sm:min-h-[360px] sm:rounded-[18px] lg:min-h-[360px] " +
+        "flex max-h-[75vh] min-h-[240px] flex-col overflow-hidden rounded-2xl border-2 bg-white shadow-card transition sm:min-h-[360px] sm:rounded-[18px] lg:h-[360px] lg:min-h-0 " +
         (over
           ? "-translate-y-[3px] border-accent shadow-[0_0_0_4px_var(--color-accent-soft)]"
           : "border-line")
@@ -437,18 +437,23 @@ function MealCard({ meal, items, total, onDrop, onAdd, onEditEntry, onRemoveEntr
           {total.toLocaleString()} kcal
         </span>
       </h3>
-      <div className="flex flex-1 flex-col gap-2 p-2.5 sm:gap-[9px] sm:p-3.5">
-        {items.map((e) => (
-          <LoggedEntry
-            key={e.id}
-            e={e}
-            onEdit={() => onEditEntry(e)}
-            onRemove={() => onRemoveEntry(e.id)}
-          />
-        ))}
+      <div className="flex min-h-0 flex-1 flex-col gap-2 p-2.5 sm:gap-[9px] sm:p-3.5">
+        {/* Entries scroll inside the fixed-height card instead of stretching it. */}
+        {!!items.length && (
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto sm:gap-[9px]">
+            {items.map((e) => (
+              <LoggedEntry
+                key={e.id}
+                e={e}
+                onEdit={() => onEditEntry(e)}
+                onRemove={() => onRemoveEntry(e.id)}
+              />
+            ))}
+          </div>
+        )}
         {/* Desktop: drag target hint when empty. */}
         {!items.length && (
-          <div className="hidden min-h-[120px] flex-1 items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-[15px] text-[#aab2bb] sm:flex lg:min-h-[64px]">
+          <div className="hidden flex-1 items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-[15px] text-[#aab2bb] sm:flex">
             {t("dropFoodHere")}
           </div>
         )}
