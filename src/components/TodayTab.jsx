@@ -16,10 +16,11 @@ import {
   uid,
 } from "../lib/model.js";
 import { useI18n } from "../lib/i18n.js";
+import { DndProvider, useDrag, useDrop } from "../lib/dnd.jsx";
 
-// True once the current drag lands on a valid target (meal bucket or the
-// Favorites bucket). dragend checks it: still false means the card was
-// dragged away → remove the entry / unfavorite.
+// True once the current (mouse/native) drag lands on a valid target. dragend
+// checks it: still false means the card was dragged away → remove the entry.
+// Touch drags are handled separately by the pointer engine in dnd.jsx.
 // Module-level is safe: only one drag can be in flight at a time.
 let dragValidDrop = false;
 
@@ -189,6 +190,11 @@ function FoodSelector({ foods, onPick, onClose }) {
 function FoodCard({ f, onAdd, onTrash, onFav, onDragAway }) {
   const { t } = useI18n();
   const [dragging, setDragging] = useState(false);
+  const touch = useDrag("food:" + f.id, {
+    onDragAway,
+    onStart: () => setDragging(true),
+    onEnd: () => setDragging(false),
+  });
   return (
     <div
       draggable
@@ -201,6 +207,7 @@ function FoodCard({ f, onAdd, onTrash, onFav, onDragAway }) {
         setDragging(false);
         if (!dragValidDrop) onDragAway?.();
       }}
+      onTouchStart={touch.onTouchStart}
       className={
         "group relative cursor-grab select-none rounded-xl border border-line bg-white px-2.5 pb-2.5 pt-3 shadow-card transition duration-[130ms] hover:-translate-y-[3px] hover:border-[#d2d9e0] hover:shadow-pop active:cursor-grabbing sm:rounded-2xl sm:px-[18px] sm:pb-4 sm:pt-[18px] " +
         (dragging ? "opacity-40" : "")
@@ -347,6 +354,11 @@ function AddFoodCard({ onAdd }) {
 function LoggedEntry({ e, onEdit, onRemove }) {
   const { t } = useI18n();
   const [dragging, setDragging] = useState(false);
+  const touch = useDrag("entry:" + e.id, {
+    onDragAway: onRemove,
+    onStart: () => setDragging(true),
+    onEnd: () => setDragging(false),
+  });
   return (
     <div
       draggable
@@ -360,6 +372,7 @@ function LoggedEntry({ e, onEdit, onRemove }) {
         setDragging(false);
         if (!dragValidDrop) onRemove();
       }}
+      onTouchStart={touch.onTouchStart}
       onClick={onEdit}
       className={
         "flex cursor-pointer items-center justify-between rounded-[11px] border border-line2 bg-[#f8fafb] px-2.5 py-1.5 active:cursor-grabbing sm:rounded-[13px] sm:px-[15px] sm:py-2 " +
@@ -391,9 +404,10 @@ function LoggedEntry({ e, onEdit, onRemove }) {
 
 function MealCard({ meal, items, total, onDrop, onAdd, onEditEntry, onRemoveEntry }) {
   const { t } = useI18n();
-  const [over, setOver] = useState(false);
+  const { ref, over, setOver } = useDrop(onDrop);
   return (
     <div
+      ref={ref}
       onDragOver={(e) => {
         e.preventDefault();
         setOver(true);
@@ -408,7 +422,7 @@ function MealCard({ meal, items, total, onDrop, onAdd, onEditEntry, onRemoveEntr
         onDrop(e.dataTransfer.getData("text/plain"));
       }}
       className={
-        "flex min-h-[240px] flex-col rounded-2xl border-2 bg-white shadow-card transition sm:min-h-[360px] sm:rounded-[18px] lg:min-h-[140px] " +
+        "flex min-h-[240px] flex-col rounded-2xl border-2 bg-white shadow-card transition sm:min-h-[360px] sm:rounded-[18px] lg:min-h-[360px] " +
         (over
           ? "-translate-y-[3px] border-accent shadow-[0_0_0_4px_var(--color-accent-soft)]"
           : "border-line")
@@ -449,6 +463,61 @@ function MealCard({ meal, items, total, onDrop, onAdd, onEditEntry, onRemoveEntr
         >
           ＋
         </button>
+      </div>
+    </div>
+  );
+}
+
+// Favorites bucket — a drop target that favorites whatever lands on it. Cards
+// here are NOT removable by dragging out (only the ♥ toggle unfavorites), so no
+// onDragAway is wired; a stray drag simply snaps back.
+function FavoritesBucket({ favs, cardProps, onDropFav }) {
+  const { t } = useI18n();
+  const { ref, over, setOver } = useDrop(onDropFav);
+  return (
+    <div
+      ref={ref}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) setOver(false);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        setOver(false);
+        dragValidDrop = true;
+        onDropFav(e.dataTransfer.getData("text/plain"));
+      }}
+      className={
+        "flex flex-col rounded-2xl border-2 bg-white shadow-card transition sm:rounded-[18px] lg:col-span-2 " +
+        (over
+          ? "-translate-y-[3px] border-[#ef4444] shadow-[0_0_0_4px_#fde8ea]"
+          : "border-[#f3d0d4]")
+      }
+    >
+      <h3 className="m-0 flex items-center justify-between border-b-2 border-[#f6e0e2] px-3.5 py-3 text-base font-extrabold sm:px-5 sm:py-[18px] sm:text-[19px]">
+        <span className="flex items-center gap-2 sm:gap-[11px]">
+          <span className="text-xl sm:text-2xl">❤️</span>{t("favorites")}
+        </span>
+        <span className="text-[13px] font-extrabold tabular-nums text-[#ef4444] sm:text-[15px]">
+          {favs.length || ""}
+        </span>
+      </h3>
+      <div className="p-2.5 sm:p-3.5">
+        {favs.length ? (
+          <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:gap-3.5">
+            {favs.map((f) => (
+              <FoodCard key={f.id} {...cardProps(f)} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex min-h-[90px] items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-sm text-[#aab2bb] sm:min-h-[120px] sm:text-[15px]">
+            <span className="sm:hidden">{t("favEmptyMobile")}</span>
+            <span className="hidden sm:inline">{t("favEmptyDesktop")}</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -617,7 +686,6 @@ export default function TodayTab({ data, update }) {
   const [pickerFood, setPickerFood] = useState(null);
   const [amtCtx, setAmtCtx] = useState(null);
   const [selectorMeal, setSelectorMeal] = useState(null);
-  const [favOver, setFavOver] = useState(false);
 
   const cur = dayFromKey(curKey);
   const todayKey = dateKey(today);
@@ -757,6 +825,7 @@ export default function TodayTab({ data, update }) {
   );
 
   return (
+   <DndProvider>
     <section className="animate-fade">
       {/* Date bar */}
       <div className="mb-3.5 flex items-center justify-center gap-2.5 sm:mb-[22px] sm:gap-[18px]">
@@ -794,50 +863,7 @@ export default function TodayTab({ data, update }) {
         </div>
 
         {/* Favorites bucket — below on phones/tablets, to the right on desktop */}
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setFavOver(true);
-          }}
-          onDragLeave={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget)) setFavOver(false);
-          }}
-          onDrop={(e) => {
-            e.preventDefault();
-            setFavOver(false);
-            dragValidDrop = true;
-            dropOnFavs(e.dataTransfer.getData("text/plain"));
-          }}
-          className={
-            "flex flex-col rounded-2xl border-2 bg-white shadow-card transition sm:rounded-[18px] lg:col-span-2 " +
-            (favOver
-              ? "-translate-y-[3px] border-[#ef4444] shadow-[0_0_0_4px_#fde8ea]"
-              : "border-[#f3d0d4]")
-          }
-        >
-          <h3 className="m-0 flex items-center justify-between border-b-2 border-[#f6e0e2] px-3.5 py-3 text-base font-extrabold sm:px-5 sm:py-[18px] sm:text-[19px]">
-            <span className="flex items-center gap-2 sm:gap-[11px]">
-              <span className="text-xl sm:text-2xl">❤️</span>{t("favorites")}
-            </span>
-            <span className="text-[13px] font-extrabold tabular-nums text-[#ef4444] sm:text-[15px]">
-              {favs.length || ""}
-            </span>
-          </h3>
-          <div className="p-2.5 sm:p-3.5">
-            {favs.length ? (
-              <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,1fr))] sm:gap-3.5">
-                {favs.map((f) => (
-                  <FoodCard key={f.id} {...cardProps(f)} onDragAway={() => toggleFav(f.id)} />
-                ))}
-              </div>
-            ) : (
-              <div className="flex min-h-[90px] items-center justify-center rounded-[13px] border-2 border-dashed border-line px-4 text-center text-sm text-[#aab2bb] sm:min-h-[120px] sm:text-[15px]">
-                <span className="sm:hidden">{t("favEmptyMobile")}</span>
-                <span className="hidden sm:inline">{t("favEmptyDesktop")}</span>
-              </div>
-            )}
-          </div>
-        </div>
+        <FavoritesBucket favs={favs} cardProps={cardProps} onDropFav={dropOnFavs} />
       </div>
 
       {/* Library */}
@@ -904,5 +930,6 @@ export default function TodayTab({ data, update }) {
         />
       )}
     </section>
+   </DndProvider>
   );
 }
