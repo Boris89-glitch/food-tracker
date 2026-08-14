@@ -17,6 +17,7 @@ const MOVE_CANCEL = 12; // px of pre-activation movement that means "scrolling"
 const EDGE = 0.42; // fraction of viewport at top/bottom that auto-scrolls
 const MAX_SCROLL = 90; // px/frame at the very edge
 const DRAG_PAN = 3.6; // finger-move → page-scroll multiplier (grab & fling)
+const SUSTAIN = 22; // px/frame the page keeps scrolling in the last move direction
 
 export function DndProvider({ children }) {
   const zonesRef = useRef([]);
@@ -59,6 +60,9 @@ export function DndProvider({ children }) {
       const k = 1 - (innerHeight - d.y) / band;
       dy = MAX_SCROLL * k * k;
     }
+    // Sustained scroll: once the finger moves a direction it keeps going every
+    // frame — no need to keep dragging — until the finger reverses or lifts.
+    if (!dy && d.sustain) dy = d.sustain;
     if (dy) scrollBy(0, dy);
 
     // Re-evaluate the hovered zone every frame: the finger may be still while
@@ -81,7 +85,11 @@ export function DndProvider({ children }) {
     // Grab-and-pan: the page tracks the finger and then some, so a short flick
     // up whisks the meal buckets into view — no need to reach the screen edge.
     const dy = t.clientY - d.y;
-    if (dy) scrollBy(0, dy * DRAG_PAN);
+    if (dy) {
+      scrollBy(0, dy * DRAG_PAN);
+      // Lock in the direction so the frame loop keeps scrolling it hands-free.
+      d.sustain = Math.sign(dy) * SUSTAIN;
+    }
     d.x = t.clientX;
     d.y = t.clientY;
   };
