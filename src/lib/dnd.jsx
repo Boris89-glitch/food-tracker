@@ -16,6 +16,7 @@ const ACTIVATE_MS = 120; // settle time before a touch becomes a drag
 const MOVE_CANCEL = 12; // px of pre-activation movement that means "scrolling"
 const EDGE = 180; // px band at top/bottom that triggers auto-scroll
 const MAX_SCROLL = 60; // px/frame at the very edge
+const DRAG_PAN = 2.4; // finger-move → page-scroll multiplier (grab & fling)
 
 export function DndProvider({ children }) {
   const zonesRef = useRef([]);
@@ -74,8 +75,12 @@ export function DndProvider({ children }) {
   const onMove = (e) => {
     const d = dragRef.current;
     if (!d) return;
-    e.preventDefault(); // hold the page still; auto-scroll is driven manually
+    e.preventDefault(); // suppress native scroll; we drive it ourselves
     const t = e.touches[0];
+    // Grab-and-pan: the page tracks the finger and then some, so a short flick
+    // up whisks the meal buckets into view — no need to reach the screen edge.
+    const dy = t.clientY - d.y;
+    if (dy) scrollBy(0, dy * DRAG_PAN);
     d.x = t.clientX;
     d.y = t.clientY;
   };
