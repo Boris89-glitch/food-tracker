@@ -14,7 +14,9 @@ const DndContext = createContext(null);
 
 const ACTIVATE_MS = 120; // settle time before a touch becomes a drag
 const MOVE_CANCEL = 12; // px of pre-activation movement that means "scrolling"
-const SUSTAIN = 45; // px/frame — fast non-stop scroll in the finger's direction
+const EDGE = 0.42; // fraction of viewport at top/bottom that auto-scrolls
+const MAX_SCROLL = 90; // px/frame at the very edge
+const DRAG_PAN = 3.6; // finger-move → page-scroll multiplier (grab & fling)
 
 export function DndProvider({ children }) {
   const zonesRef = useRef([]);
@@ -46,10 +48,18 @@ export function DndProvider({ children }) {
     const d = dragRef.current;
     if (!d) return;
 
-    // The moment the finger moved a direction, we locked in a fast scroll that
-    // direction (d.sustain). Keep firing it every frame until the finger
-    // reverses or lifts — hands-free, no need to keep moving or reach an edge.
-    if (d.sustain) scrollBy(0, d.sustain);
+    // Edge auto-scroll — steeper the closer to the edge, so you can whip the
+    // page up to reach the meal buckets while dragging from the library.
+    let dy = 0;
+    const band = innerHeight * EDGE;
+    if (d.y < band) {
+      const k = 1 - d.y / band; // 0 at band edge → 1 at the very top
+      dy = -MAX_SCROLL * k * k; // quadratic ramp: gentle far, fast near the edge
+    } else if (d.y > innerHeight - band) {
+      const k = 1 - (innerHeight - d.y) / band;
+      dy = MAX_SCROLL * k * k;
+    }
+    if (dy) scrollBy(0, dy);
 
     // Re-evaluate the hovered zone every frame: the finger may be still while
     // the page scrolls under it.
@@ -68,10 +78,10 @@ export function DndProvider({ children }) {
     if (!d) return;
     e.preventDefault(); // suppress native scroll; we drive it ourselves
     const t = e.touches[0];
-    // Direction of the finger sets a fast, non-stopping scroll that way. The
-    // frame loop keeps it running; a reverse move flips it, lifting ends it.
+    // Grab-and-pan: the page tracks the finger and then some, so a short flick
+    // up whisks the meal buckets into view — no need to reach the screen edge.
     const dy = t.clientY - d.y;
-    if (dy) d.sustain = Math.sign(dy) * SUSTAIN;
+    if (dy) scrollBy(0, dy * DRAG_PAN);
     d.x = t.clientX;
     d.y = t.clientY;
   };
