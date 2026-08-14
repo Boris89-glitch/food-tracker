@@ -375,11 +375,11 @@ function LoggedEntry({ e, onEdit, onRemove }) {
       onTouchStart={touch.onTouchStart}
       onClick={onEdit}
       className={
-        "flex cursor-pointer items-center justify-between rounded-[11px] border border-line2 bg-[#f8fafb] px-2.5 py-1.5 active:cursor-grabbing sm:rounded-[13px] sm:px-[15px] sm:py-2 " +
+        "flex min-h-0 shrink cursor-pointer items-center justify-between overflow-hidden rounded-[11px] border border-line2 bg-[#f8fafb] px-2.5 py-1.5 active:cursor-grabbing sm:rounded-[13px] sm:px-[15px] sm:py-2 " +
         (dragging ? "opacity-45" : "")
       }
     >
-      <span className="min-w-0 break-words pr-2 text-sm font-semibold sm:text-base">
+      <span className="min-w-0 truncate pr-2 text-sm font-semibold sm:text-base">
         {e.name}{" "}
         <span className="ml-0.5 text-xs font-semibold text-muted sm:text-sm">{amtLabel(e)}</span>
       </span>
@@ -438,9 +438,10 @@ function MealCard({ meal, items, total, onDrop, onAdd, onEditEntry, onRemoveEntr
         </span>
       </h3>
       <div className="flex min-h-0 flex-1 flex-col gap-2 p-2.5 sm:gap-[9px] sm:p-3.5">
-        {/* Entries scroll inside the fixed-height card instead of stretching it. */}
+        {/* Entries shrink to fit the fixed-height card: the more you log, the
+            tighter each row packs, instead of the card growing or scrolling. */}
         {!!items.length && (
-          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto sm:gap-[9px]">
+          <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-hidden sm:gap-2">
             {items.map((e) => (
               <LoggedEntry
                 key={e.id}
