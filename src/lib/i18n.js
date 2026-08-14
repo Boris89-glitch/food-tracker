@@ -84,6 +84,7 @@ const T = {
 
     dailyVsGoal: "Daily calories vs goal",
     daysRange: "{r} days",
+    allDays: "All",
     dayByDay: "Day by day",
     todaySuffix: "today",
     noHistory: "No history yet.",
@@ -169,6 +170,7 @@ const T = {
 
     dailyVsGoal: "Dnevne kalorije naspram cilja",
     daysRange: "{r} dana",
+    allDays: "Sve",
     dayByDay: "Dan po dan",
     todaySuffix: "danas",
     noHistory: "Još nema istorije.",

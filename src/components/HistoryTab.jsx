@@ -23,10 +23,22 @@ export default function HistoryTab({ data, visible }) {
   useEffect(() => {
     if (!visible || !canvasRef.current) return;
     const days = [];
-    for (let i = range - 1; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      days.push(d);
+    if (range === "all") {
+      // Every day from the first logged entry through today — side-scroll for
+      // the rest when there are more bars than fit.
+      const keys = Object.keys(logs)
+        .filter((key) => entriesFor(logs, key).length)
+        .sort();
+      const start = keys.length ? dayFromKey(keys[0]) : new Date(today);
+      for (const d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
+        days.push(new Date(d));
+      }
+    } else {
+      for (let i = range - 1; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        days.push(d);
+      }
     }
     const labels = days.map((d) => fmtShort(d));
     const points = days.map((d) => dayTotal(logs, dateKey(d)));
@@ -81,6 +93,15 @@ export default function HistoryTab({ data, visible }) {
     .sort()
     .reverse();
 
+  // Bar count for the chart width: fixed ranges use the range itself; "all"
+  // spans the first logged day → today so the chart can side-scroll.
+  const barCount =
+    range === "all"
+      ? historyKeys.length
+        ? Math.round((today - dayFromKey(historyKeys[historyKeys.length - 1])) / 86400000) + 1
+        : 1
+      : range;
+
   const card =
     "rounded-2xl border border-line bg-white p-4 shadow-card sm:rounded-[18px] sm:p-6";
   const sectit =
@@ -91,7 +112,7 @@ export default function HistoryTab({ data, visible }) {
       <div className={card}>
         <p className={sectit}>{t("dailyVsGoal")}</p>
         <div className="mb-4 flex gap-2">
-          {[7, 14, 30].map((r) => (
+          {[7, 14, 30, "all"].map((r) => (
             <button
               key={r}
               onClick={() => setRange(r)}
@@ -102,12 +123,14 @@ export default function HistoryTab({ data, visible }) {
                   : "border-line bg-white text-muted")
               }
             >
-              {t("daysRange", { r })}
+              {r === "all" ? t("allDays") : t("daysRange", { r })}
             </button>
           ))}
         </div>
-        <div className="relative h-[230px] sm:h-[320px]">
-          <canvas ref={canvasRef} />
+        <div className="relative h-[230px] overflow-x-auto sm:h-[320px]">
+          <div className="h-full" style={range === "all" ? { minWidth: barCount * 42 } : undefined}>
+            <canvas ref={canvasRef} />
+          </div>
         </div>
       </div>
       <div className={card}>
