@@ -14,10 +14,7 @@ const DndContext = createContext(null);
 
 const ACTIVATE_MS = 120; // settle time before a touch becomes a drag
 const MOVE_CANCEL = 12; // px of pre-activation movement that means "scrolling"
-const EDGE = 0.42; // fraction of viewport at top/bottom that auto-scrolls
-const MAX_SCROLL = 90; // px/frame at the very edge
-const DRAG_PAN = 3.6; // finger-move → page-scroll multiplier (grab & fling)
-const SUSTAIN = 22; // px/frame the page keeps scrolling in the last move direction
+const SUSTAIN = 45; // px/frame — fast non-stop scroll in the finger's direction
 
 export function DndProvider({ children }) {
   const zonesRef = useRef([]);
@@ -49,21 +46,10 @@ export function DndProvider({ children }) {
     const d = dragRef.current;
     if (!d) return;
 
-    // Edge auto-scroll — steeper the closer to the edge, so you can whip the
-    // page up to reach the meal buckets while dragging from the library.
-    let dy = 0;
-    const band = innerHeight * EDGE;
-    if (d.y < band) {
-      const k = 1 - d.y / band; // 0 at band edge → 1 at the very top
-      dy = -MAX_SCROLL * k * k; // quadratic ramp: gentle far, fast near the edge
-    } else if (d.y > innerHeight - band) {
-      const k = 1 - (innerHeight - d.y) / band;
-      dy = MAX_SCROLL * k * k;
-    }
-    // Sustained scroll: once the finger moves a direction it keeps going every
-    // frame — no need to keep dragging — until the finger reverses or lifts.
-    if (!dy && d.sustain) dy = d.sustain;
-    if (dy) scrollBy(0, dy);
+    // The moment the finger moved a direction, we locked in a fast scroll that
+    // direction (d.sustain). Keep firing it every frame until the finger
+    // reverses or lifts — hands-free, no need to keep moving or reach an edge.
+    if (d.sustain) scrollBy(0, d.sustain);
 
     // Re-evaluate the hovered zone every frame: the finger may be still while
     // the page scrolls under it.
@@ -82,14 +68,10 @@ export function DndProvider({ children }) {
     if (!d) return;
     e.preventDefault(); // suppress native scroll; we drive it ourselves
     const t = e.touches[0];
-    // Grab-and-pan: the page tracks the finger and then some, so a short flick
-    // up whisks the meal buckets into view — no need to reach the screen edge.
+    // Direction of the finger sets a fast, non-stopping scroll that way. The
+    // frame loop keeps it running; a reverse move flips it, lifting ends it.
     const dy = t.clientY - d.y;
-    if (dy) {
-      scrollBy(0, dy * DRAG_PAN);
-      // Lock in the direction so the frame loop keeps scrolling it hands-free.
-      d.sustain = Math.sign(dy) * SUSTAIN;
-    }
+    if (dy) d.sustain = Math.sign(dy) * SUSTAIN;
     d.x = t.clientX;
     d.y = t.clientY;
   };
