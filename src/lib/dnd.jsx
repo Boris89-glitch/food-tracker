@@ -16,7 +16,6 @@ const ACTIVATE_MS = 120; // settle time before a touch becomes a drag
 const MOVE_CANCEL = 12; // px of pre-activation movement that means "scrolling"
 const EDGE = 0.5; // fraction of viewport at top/bottom that auto-scrolls (whole screen)
 const MAX_SCROLL = 110; // px/frame at the very edge
-const MIN_SCROLL = 30; // px/frame just off-center — keeps the middle moving briskly
 const DRAG_PAN = 3.6; // finger-move → page-scroll multiplier (grab & fling)
 
 export function DndProvider({ children }) {
@@ -53,14 +52,12 @@ export function DndProvider({ children }) {
     // page up to reach the meal buckets while dragging from the library.
     let dy = 0;
     const band = innerHeight * EDGE;
-    // Linear ramp from a solid base speed near the middle up to full at the
-    // edge, so even a small offset from center scrolls at a useful pace.
     if (d.y < band) {
-      const k = 1 - d.y / band; // 0 at center → 1 at the very top
-      dy = -(MIN_SCROLL + (MAX_SCROLL - MIN_SCROLL) * k);
+      const k = 1 - d.y / band; // 0 at band edge → 1 at the very top
+      dy = -MAX_SCROLL * k * k; // quadratic ramp: gentle far, fast near the edge
     } else if (d.y > innerHeight - band) {
       const k = 1 - (innerHeight - d.y) / band;
-      dy = MIN_SCROLL + (MAX_SCROLL - MIN_SCROLL) * k;
+      dy = MAX_SCROLL * k * k;
     }
     if (dy) scrollBy(0, dy);
 
